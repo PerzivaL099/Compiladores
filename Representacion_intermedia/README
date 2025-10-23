@@ -1,0 +1,4 @@
+Este proyecto tiene la capacidad de leer un text file el cual 
+contiene un pseudocodigo. La classe de mayor importancia es la de PruebaTuplas, siendo que 
+aqui es donde se lee el archivo y llama a mandar al PseudoLexer y al PseudoParser para que hagan su 
+trabajo.
