@@ -1,4 +1,3 @@
-
 import java.util.ArrayList;
 
 public class TablaSimbolos {
@@ -15,6 +14,9 @@ public class TablaSimbolos {
                 return s;
             }
         }
+        
+        System.err.println("DEPURACIÓN: Símbolo '" + nombre + "' NO ENCONTRADO.");
+        
         return null;
     }
 
