@@ -1,4 +1,4 @@
-package parser;
+package compilador.parser;
 
 public abstract class ASTNode {
     protected int line;

@@ -1,4 +1,4 @@
-package semantico;
+package compilador.semantico;
 
 import java.util.Stack;
 import java.util.HashMap;

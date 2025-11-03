@@ -1,4 +1,4 @@
-package lexer;
+package compilador.lexer;
 
 public class Token {
     public enum TokenType{

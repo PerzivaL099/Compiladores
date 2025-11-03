@@ -184,4 +184,10 @@ public class DiagramGenerator implements ASTVisitor {
     @Override public Object visit(VariableAccess node) { return node.id; }
     @Override public Object visit(LiteralExpression node) { return node.value.toString(); }
     @Override public Object visit(Parameter node) { return null; }
+
+    @Override
+    public Object visit(compilador.parser.Program node) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    }
 }

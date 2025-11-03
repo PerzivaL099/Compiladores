@@ -9,7 +9,7 @@ import java.util.Map;
 //Traduce lista de cuadruplas a codigo ensamblador
 public class CodeGenerator {
     private final List<Cuadrupla> intermediateCode;
-    private final List<String> assemblyCode =  new ArrayList<>()
+    private final List<String> assemblyCode =  new ArrayList<>();
 
     //Mapeo simple de variables a posiciones de pila
     private final Map<String, Integer> stackOffset = new HashMap<>();

@@ -2,7 +2,7 @@ package compilador;
 
 import compilador.lexer.Lexer;
 import compilador.parser.Parser;
-import compilador.parser.declarations.Program;
+//import compilador.parser.declarations.Program;
 import compilador.semantico.SemanticAnalyzer;
 import compilador.intermedio.InterCodeGenerator;
 import compilador.intermedio.Cuadrupla;

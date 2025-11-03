@@ -1,11 +1,11 @@
-package lexer;
+package compilador.lexer;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class Lexer {
     private final String sourceCode;
-    private int currentPosicion = 0;
+    private int currentPosition = 0;
     private int currentLine = 1;
     private char currentChar;
 
@@ -35,9 +35,9 @@ public class Lexer {
 
     // Método auxiliar para avanzar la posición y actualizar currentChar
     private void advance() {
-        currentPosicion++;
-        if (currentPosicion < sourceCode.length()) {
-            currentChar = sourceCode.charAt(currentPosicion);
+        currentPosition++;
+        if (currentPosition < sourceCode.length()) {
+            currentChar = sourceCode.charAt(currentPosition);
         } else {
             currentChar = '\0'; // Representa el EOF (End Of File)
         }

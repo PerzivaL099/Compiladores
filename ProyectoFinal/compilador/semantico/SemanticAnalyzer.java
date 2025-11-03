@@ -1,8 +1,7 @@
-package semantico;
+package compilador.semantico;
 
 
 import compilador.parser.ASTVisitor;
-import semantico.TablaSimbolos;
 
 public class SemanticAnalyzer implements ASTVisitor {
     private final TablaSimbolos tablaSimbolos;
