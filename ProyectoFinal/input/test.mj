@@ -1,0 +1,29 @@
+// Archivo: input/test.mj
+
+int factorial(int n) {
+    if (n < 1) {
+        return 1;
+    } else {
+        int temp;
+        // temp = n * factorial(n - 1);
+        // La línea de abajo es la que el parser debe manejar:
+        temp = n * factorial(n - 1); 
+        return temp;
+    }
+}
+
+int main() {
+    int x;
+    int resultado;
+    x = 5;
+
+    // Ciclo While simple
+    while (x > 0) {
+        resultado = factorial(x);
+        x = x - 1; 
+    }
+    
+    // Asignación final para probar el return
+    resultado = 120;
+    return resultado; 
+}
