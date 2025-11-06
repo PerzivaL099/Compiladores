@@ -51,7 +51,8 @@ public class SemanticAnalyzer implements ASTVisitor {
         // 1. Primera pasada: registrar todas las firmas de funciones
         for (FunctionDeclaration func : node.functions) {
             // Asume que TablaSimbolos tiene un método para registrar la firma
-            tablaSimbolos.declareFunction(func.id, func.returnType, func.parameters); 
+            // LÍNEA CORREGIDA
+            tablaSimbolos.declareFunction(func);
         }
         
         // 2. Segunda pasada: visitar el cuerpo de cada función

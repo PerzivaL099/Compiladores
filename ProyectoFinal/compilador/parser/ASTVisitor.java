@@ -1,5 +1,3 @@
-//package parser;
-
 package compilador.parser;
 
 // Importar todas las categorías de nodos
@@ -11,9 +9,10 @@ import compilador.parser.declarations.*;
  * Interfaz que define el Patrón Visitor para recorrer el AST.
  * Cada fase del compilador (Semántico, Cuádruplas, Diagramas)
  * implementará esta interfaz.
- * @param <BlockStatement>
+ * (La línea ha sido eliminada)
  */
-public interface ASTVisitor<BlockStatement> {
+// LA CORRECCIÓN CLAVE: <BlockStatement> ha sido eliminado de la definición
+public interface ASTVisitor { 
     
     // Nodos de Declaración
     Object visit(Program node);
@@ -21,7 +20,8 @@ public interface ASTVisitor<BlockStatement> {
     Object visit(Parameter node);
 
     // Nodos de Sentencias (Statements)
-    Object visit(BlockStatement node);
+    // Ahora "BlockStatement" se refiere a la CLASE importada, no a un genérico
+    Object visit(BlockStatement node); 
     Object visit(DeclarationStatement node);
     Object visit(AssignmentStatement node);
     Object visit(IfStatement node);
@@ -34,7 +34,5 @@ public interface ASTVisitor<BlockStatement> {
     Object visit(FunctionCall node);
     Object visit(VariableAccess node);
     Object visit(LiteralExpression node);
-    
-    // Nota: La clase abstracta base 'Expression' no necesita un método 'visit' propio,
     
 }

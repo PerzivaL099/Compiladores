@@ -2,6 +2,7 @@ package compilador.generacion;
 
 import compilador.parser.ASTVisitor;
 import compilador.parser.ASTNode;
+// Importar todos los nodos AST
 import compilador.parser.declarations.*; 
 import compilador.parser.expressions.*;
 import compilador.parser.statements.*;
@@ -13,18 +14,24 @@ import java.util.Map;
 
 /**
  * Genera código DOT (Graphviz) a partir del AST para crear Diagramas de Flujo.
+ * Implementa todos los métodos de ASTVisitor.
  */
-public class DiagramGenerator implements ASTVisitor<Object> {
+@SuppressWarnings("rawtypes") // Suprimir advertencias de tipo crudo
+public class DiagramGenerator implements ASTVisitor {
 
     private final StringBuilder dotCode = new StringBuilder();
     private int nodeCounter = 0;
-    private final Map<ASTNode, String> nodeNames = new HashMap<>();
+    
+    // Almacena el nombre del nodo de INICIO y FIN de un bloque de sentencias
+    // <Key: Nodo AST (ej. IfStatement), Value: [Nodo_Inicio, Nodo_Fin]>
+    private final Map<ASTNode, String[]> nodeRegistry = new HashMap<>();
 
     public void generate(Program program, String filename) throws IOException {
         dotCode.append("digraph FlowChart {\n");
-        dotCode.append("\trankdir=TB; // Top to Bottom\n");
+        dotCode.append("\trankdir=TB; // De Arriba a Abajo\n");
         dotCode.append("\tnode [shape=box, style=\"rounded\"];\n"); 
         
+        // Iniciar la visita
         program.accept(this);
 
         dotCode.append("}\n");
@@ -32,25 +39,17 @@ public class DiagramGenerator implements ASTVisitor<Object> {
         try (FileWriter writer = new FileWriter(filename)) {
             writer.write(dotCode.toString());
         }
-        System.out.println("      -> Diagrama DOT generado en: " + filename);
     }
     
     // --- Utilidades DOT ---
     
-    // Obtiene o crea un nombre de nodo único
-    private String getNodeName(ASTNode node) {
-        if (!nodeNames.containsKey(node)) {
-            String name = "N" + (nodeCounter++);
-            nodeNames.put(node, name);
-            return name;
-        }
-        return nodeNames.get(node);
+    private String getNextNodeName() {
+        return "N" + (nodeCounter++);
     }
     
     // Define el nodo en DOT
     private void defineNode(String name, String label, String shape, String color) {
-        // Sanitizar label para DOT
-        label = label.replace("\"", "'").replace("\n", "\\n").replace(";", "\\;"); 
+        label = label.replace("\"", "'").replace("\n", "\\n").replace(";", ""); 
         dotCode.append(String.format("\t%s [label=\"%s\", shape=%s, color=\"%s\"];\n", name, label, shape, color));
     }
     
@@ -67,153 +66,168 @@ public class DiagramGenerator implements ASTVisitor<Object> {
     
     @Override
     public Object visit(Program node) {
-        // Dibujamos START/END si solo compilamos una función principal (main).
-        // Si hay múltiples funciones, las visitamos secuencialmente.
-        String lastNode = "START_PROGRAM";
-        defineNode(lastNode, "START", "oval", "black");
+        String startNode = getNextNodeName();
+        defineNode(startNode, "START", "oval", "black");
         
+        String lastNode = startNode;
         for (FunctionDeclaration func : node.functions) {
             String funcStart = (String) func.accept(this);
-            defineEdge(lastNode, funcStart, "Define");
-            lastNode = funcStart; // Usamos la etiqueta de inicio de la función como el último nodo visitado.
+            defineEdge(lastNode, funcStart, "");
+            
+            // Obtenemos el nodo final del cuerpo de la función
+            String funcEnd = nodeRegistry.get(func.body)[1];
+            lastNode = funcEnd; 
         }
         
-        // Simular el nodo final
-        String endNode = "END_PROGRAM";
+        String endNode = getNextNodeName();
         defineNode(endNode, "END", "oval", "black");
-        defineEdge(lastNode, endNode, "Fin");
-        
+        defineEdge(lastNode, endNode, "");
         return null;
     }
 
     @Override
     public Object visit(FunctionDeclaration node) {
-        String funcName = node.id;
-        defineNode(funcName, "FUNCIÓN: " + funcName + "(" + node.returnType + ")", "invhouse", "blue");
+        String funcName = getNextNodeName();
+        defineNode(funcName, "FUNCIÓN: " + node.id, "invhouse", "blue");
         
-        // Asume que el cuerpo siempre es un BlockStatement
-        node.body.accept(this); 
+        // Visitamos el cuerpo (que es un BlockStatement)
+        String bodyStart = (String) node.body.accept(this);
+        defineEdge(funcName, bodyStart, "Entry");
         
-        return funcName; // Devolvemos el nombre de la función (etiqueta de inicio)
+        return funcName; // Devolvemos el nombre del nodo de INICIO de esta función
     }
 
     @Override
-    public Object visit(Parameter node) { return null; }
+    public Object visit(Parameter node) { return null; } // No se dibujan
     
     // =================================================================
     // II. SENTENCIAS (FLUJO Y SECUENCIA)
+    // =NOTAS: 
+    // - Los métodos visit(Sentencia) DEBEN devolver el nombre del NODO DE INICIO.
+    // - También DEBEN registrar su NODO DE FIN en nodeRegistry.
     // =================================================================
 
     @Override
     public Object visit(BlockStatement node) {
-        String startNode = getNodeName(node);
-        // Definición inicial del nodo
+        String startNode = getNextNodeName();
+        String endNode = getNextNodeName();
         
+        // Registra el inicio y el fin del bloque
+        nodeRegistry.put(node, new String[]{startNode, endNode});
+        
+        // Nodo "fantasma" de inicio de bloque
+        defineNode(startNode, "BlockStart", "point", "white");
+        defineNode(endNode, "BlockEnd", "point", "white");
+
         String lastNode = startNode;
-        String nextNode = null;
-
-        for (int i = 0; i < node.statements.size(); i++) {
-            ASTNode currentStmt = node.statements.get(i);
-            String currentNode = (String) currentStmt.accept(this); // Visita y obtiene la etiqueta de inicio
-
-            if (i > 0) {
-                // Conectar el nodo anterior (o el fin del bloque anterior) al inicio del nodo actual
-                defineEdge(lastNode, currentNode, "");
-            }
+        
+        for (ASTNode stmt : node.statements) {
+            String stmtStart = (String) stmt.accept(this); // Visita y obtiene la etiqueta de inicio
+            defineEdge(lastNode, stmtStart, "");
             
-            // Si el nodo actual no es un IF o WHILE, el fin es su propio inicio.
-            // (La complejidad de manejo de fin de IF/WHILE se deja para el visit de esos nodos)
-            lastNode = currentNode;
+            // Obtenemos el nodo final de la sentencia que acabamos de visitar
+            lastNode = nodeRegistry.get(stmt)[1];
         }
-        return startNode;
+        
+        // Conectar el último nodo del bloque al nodo final del bloque
+        defineEdge(lastNode, endNode, "");
+        
+        return startNode; // Devuelve el nodo de INICIO
     }
 
     @Override
     public Object visit(DeclarationStatement node) {
-        String name = getNodeName(node);
+        String name = getNextNodeName();
         String label = node.type + " " + node.id + 
-                       (node.initialValue != null ? " = " + node.initialValue.toString() : "");
+                       (node.initialValue != null ? " = ..." : "");
         defineNode(name, label, "box", "green");
+        
+        // El inicio y el fin son el mismo nodo
+        nodeRegistry.put(node, new String[]{name, name}); 
         return name;
     }
 
     @Override
     public Object visit(AssignmentStatement node) {
-        String name = getNodeName(node);
-        String label = String.format("%s = %s", node.id, node.value.toString()); 
+        String name = getNextNodeName();
+        String label = String.format("%s = ...", node.id); 
         defineNode(name, label, "box", "black");
+        
+        nodeRegistry.put(node, new String[]{name, name});
         return name;
     }
     
     @Override
     public Object visit(IfStatement node) {
-        String condNode = getNodeName(node);
-        defineNode(condNode, "IF: " + node.condition.toString(), "diamond", "red"); 
+        String condNode = getNextNodeName();
+        defineNode(condNode, "IF: ...", "diamond", "red"); 
 
-        String joinNode = getNodeName(node) + "_JOIN"; 
-        defineNode(joinNode, "", "circle", "black"); // Punto de confluencia
+        String joinNode = getNextNodeName(); // Punto de confluencia
+        defineNode(joinNode, "", "point", "white"); 
+        
+        nodeRegistry.put(node, new String[]{condNode, joinNode});
 
         // Rama THEN
         String thenStart = (String) node.thenBranch.accept(this);
+        String thenEnd = nodeRegistry.get(node.thenBranch)[1];
         defineEdge(condNode, thenStart, "True");
-        defineEdge(thenStart, joinNode, ""); // Conecta el final del THEN al JOIN
+        defineEdge(thenEnd, joinNode, "");
 
-        // Rama ELSE (si existe)
+        // Rama ELSE
         if (node.elseBranch != null) {
             String elseStart = (String) node.elseBranch.accept(this);
+            String elseEnd = nodeRegistry.get(node.elseBranch)[1];
             defineEdge(condNode, elseStart, "False");
-            defineEdge(elseStart, joinNode, ""); // Conecta el final del ELSE al JOIN
+            defineEdge(elseEnd, joinNode, "");
         } else {
-            // Si no hay ELSE, la rama False salta directamente al JOIN
             defineEdge(condNode, joinNode, "False");
         }
         
-        return condNode; // Devuelve el nodo de inicio del IF para la secuencia
+        return condNode; // Devuelve el nodo de inicio del IF
     }
 
     @Override
     public Object visit(WhileStatement node) {
-        String condNode = getNodeName(node);
-        defineNode(condNode, "WHILE: " + node.condition.toString(), "diamond", "red"); 
+        String condNode = getNextNodeName();
+        defineNode(condNode, "WHILE: ...", "diamond", "red"); 
+
+        String joinNode = getNextNodeName(); // Nodo de salida (si es Falso)
+        defineNode(joinNode, "", "point", "white");
+        
+        nodeRegistry.put(node, new String[]{condNode, joinNode});
 
         // Visitar cuerpo
         String bodyStart = (String) node.body.accept(this);
+        String bodyEnd = nodeRegistry.get(node.body)[1];
         
         // Conexiones de flujo
         defineEdge(condNode, bodyStart, "True");
-        defineEdge(bodyStart, condNode, "Loop"); // Bucle de vuelta a la condición
-        
-        // Necesitamos un nodo de salida. Simplemente devolvemos el nodo condición.
-        // El nodo que siga al WHILE se conectará al nodo que sigue al nodo condNode.
+        defineEdge(bodyEnd, condNode, "Loop"); // Bucle de vuelta a la condición
+        defineEdge(condNode, joinNode, "False"); // Salida del bucle
         
         return condNode; 
     }
 
     @Override
     public Object visit(ReturnStatement node) {
-        String name = getNodeName(node);
-        defineNode(name, "RETURN " + node.value.toString(), "box", "orange");
+        String name = getNextNodeName();
+        defineNode(name, "RETURN ...", "box", "orange");
+        nodeRegistry.put(node, new String[]{name, name});
         return name;
     }
 
     // =================================================================
-    // III. EXPRESIONES (Devuelven el identificador del resultado como String, no dibujan nodos)
+    // III. EXPRESIONES (No se dibujan, solo se implementa el stub)
     // =================================================================
 
     @Override
-    public Object visit(BinaryExpression node) { return node.left.toString() + node.operator.getLexeme() + node.right.toString(); }
+    public Object visit(BinaryExpression node) { return null; }
     @Override
-    public Object visit(UnaryExpression node) { return node.operator.getLexeme() + node.operand.toString(); }
+    public Object visit(UnaryExpression node) { return null; }
     @Override
-    public Object visit(FunctionCall node) { return "CALL " + node.id + "(...)"; }
+    public Object visit(FunctionCall node) { return null; }
     @Override
-    public Object visit(VariableAccess node) { return node.id; }
+    public Object visit(VariableAccess node) { return null; }
     @Override
-    public Object visit(LiteralExpression node) { return node.value.toString(); }
-
-    @Override
-    public Object visit(Object node) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
-    }
+    public Object visit(LiteralExpression node) { return null; }
 }
