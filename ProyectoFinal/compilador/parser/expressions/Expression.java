@@ -1,13 +1,14 @@
 package compilador.parser.expressions;
 
-import compilador.parser.ASTNode;
+import compilador.parser.ASTNode; // Importa el padre
 
 /**
- * Clase base abstracta para todos los nodos que representan Expresiones (valores computables).
+ * Clase base abstracta para todas las Expresiones.
+ * Hereda de ASTNode.
  */
 public abstract class Expression extends ASTNode { 
     
     public Expression(int line) {
-        super(line);
+        super(line); // Llama al constructor del padre
     }
 }

@@ -1,17 +1,20 @@
-package compilador.parser; // LÍNEA 1
+package compilador.parser; // Línea 1
 
+// Utilidades de Java
 import java.util.ArrayList;
 import java.util.List;
 
+// Importar el Lexer y Token
 import compilador.lexer.Lexer;
 import compilador.lexer.Token;
 import compilador.lexer.Token.TokenType;
 
-// 1. Nodos de Declaración: USAMOS import * para simplificar
-import compilador.parser.declarations.*;
-import compilador.parser.expressions.Expression;
-import compilador.parser.expressions.Expression.*;
-import compilador.parser.statements.Statement.*;
+// Importar TODOS los nodos del AST usando el wildcard (*)
+import compilador.parser.declarations.*; 
+import compilador.parser.expressions.*; 
+import compilador.parser.statements.*; 
+import compilador.parser.ASTNode; // Importar la clase base
+import compilador.parser.ASTVisitor; // Importar la interfaz
 
 public class Parser {
 

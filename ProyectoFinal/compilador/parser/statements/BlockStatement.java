@@ -9,15 +9,15 @@ import java.util.ArrayList;
  * Representa un bloque de código { ... }. Contiene una lista secuencial de sentencias.
  * Hereda de Statement.
  */
-// CORRECCIÓN CLAVE: Aseguramos que la clase herede correctamente de Statement.
 public class BlockStatement extends Statement {
 
     // La lista de todas las sentencias dentro del bloque
     public final List<ASTNode> statements;
 
     public BlockStatement(int line, List<ASTNode> statements) {
-        super(line);
-        // Inicializar la lista por si el parser pasa 'null' o una lista vacía
+        super(line); // Llama al constructor de Statement (que llama a ASTNode)
+        
+        // Inicializar la lista por si el parser pasa 'null'
         this.statements = (statements != null) ? statements : new ArrayList<>();
     }
     
@@ -29,8 +29,8 @@ public class BlockStatement extends Statement {
 
     // Implementación del Patrón Visitor
     @Override
+    @SuppressWarnings("rawtypes") // Opcional: Silenciar advertencia de ASTVisitor
     public Object accept(ASTVisitor visitor) {
-        // Lógica de visita: aquí se abrirá y cerrará un nuevo ámbito.
         return visitor.visit(this); 
     }
     

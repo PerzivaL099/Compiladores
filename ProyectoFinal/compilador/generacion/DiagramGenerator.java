@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * Genera código DOT (Graphviz) a partir del AST para crear Diagramas de Flujo.
  */
-public class DiagramGenerator implements ASTVisitor {
+public class DiagramGenerator implements ASTVisitor<Object> {
 
     private final StringBuilder dotCode = new StringBuilder();
     private int nodeCounter = 0;
@@ -210,4 +210,10 @@ public class DiagramGenerator implements ASTVisitor {
     public Object visit(VariableAccess node) { return node.id; }
     @Override
     public Object visit(LiteralExpression node) { return node.value.toString(); }
+
+    @Override
+    public Object visit(Object node) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    }
 }
