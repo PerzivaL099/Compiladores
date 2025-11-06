@@ -1,6 +1,25 @@
-// input/test.mj
-function int main() {
+// Archivo: input/test.mj
+// (Línea 2 vacía)
+int factorial(int n) {
+    if (n < 1) {
+        return 1;
+    } else {
+        int temp;
+        temp = n * factorial(n - 1); 
+        return temp;
+    }
+}
+
+int main() {
     int x;
+    int resultado;
     x = 5;
-    return x;
+
+    while (x > 0) {
+        resultado = factorial(x);
+        x = x - 1; 
+    }
+    
+    resultado = 120;
+    return resultado; 
 }

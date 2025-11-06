@@ -43,19 +43,55 @@ public class Lexer {
         }
     }
 
-    //Metodo para manejar espacios en blanco
-    private void skipWhitespace(){
-        while(Character.isWhitespace(currentChar) || currentChar == '\n' || currentChar == '\r'){
-            if(currentChar == '\n'){
-                currentLine++;
+    // --- INICIO DE LA CORRECCIÓN ---
+
+    // 1. ESTE MÉTODO REEMPLAZA TU VERSIÓN ANTERIOR DE skipWhitespace
+    /**
+     * Consume espacios en blanco, saltos de línea y comentarios de una sola línea.
+     */
+    private void skipWhitespace() {
+        while (currentChar != '\0') { // Mientras no sea fin de archivo
+            
+            if (Character.isWhitespace(currentChar) || currentChar == '\n' || currentChar == '\r') {
+                // Es espacio en blanco, tabulación o salto de línea
+                if (currentChar == '\n') {
+                    currentLine++;
+                }
+                advance();
+            } else if (currentChar == '/') {
+                // Podría ser un comentario (//) o una división (/)
+                if (currentPosition + 1 < sourceCode.length() && sourceCode.charAt(currentPosition + 1) == '/') {
+                    // Es un comentario de línea (//), lo saltamos
+                    skipLineComment();
+                } else {
+                    // Es un (/) de división. No es whitespace, así que salimos del bucle.
+                    break;
+                }
+            } else {
+                // No es ni whitespace ni comentario, salimos del bucle.
+                break; 
             }
+        }
+    }
+
+    // 2. ESTE ES EL NUEVO MÉTODO AUXILIAR QUE DEBES AGREGAR
+    /**
+     * Avanza el cursor hasta el final de la línea (o fin de archivo) 
+     * para ignorar un comentario.
+     */
+    private void skipLineComment() {
+        // Avanza hasta que encuentre el salto de línea o el fin de archivo
+        while (currentChar != '\n' && currentChar != '\0') {
             advance();
         }
     }
 
+    // --- FIN DE LA CORRECCIÓN ---
+
+
     // **MÉTODO PRINCIPAL: Entrega el siguiente token**
     public Token nextToken() {
-        skipWhitespace();
+        skipWhitespace(); // <- Esta llamada ahora también ignora comentarios
 
         if (currentChar == '\0') {
             return new Token(Token.TokenType.EOF, "", null, currentLine);
@@ -131,7 +167,11 @@ public class Lexer {
             case '+': advance(); return new Token(Token.TokenType.PLUS, "+", null, startLine);
             case '-': advance(); return new Token(Token.TokenType.MINUS, "-", null, startLine);
             case '*': advance(); return new Token(Token.TokenType.MULT, "*", null, startLine);
+            
+            // NOTA: La lógica de '/' (división) se maneja aquí. 
+            // El 'skipWhitespace' solo detecta '//' (comentario).
             case '/': advance(); return new Token(Token.TokenType.DIV, "/", null, startLine);
+            
             case ';': advance(); return new Token(Token.TokenType.SEMICOLON, ";", null, startLine);
             case ',': advance(); return new Token(Token.TokenType.COMMA, ",", null, startLine);
             case '(': advance(); return new Token(Token.TokenType.LPAREN, "(", null, startLine);
