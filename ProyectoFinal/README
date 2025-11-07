@@ -1,0 +1,42 @@
+# ⚙️ PROYECTOFINAL: Compilador con Generador de Diagramas
+
+Este proyecto es un compilador completo para un curso de Compiladores. El programa toma un lenguaje de alto nivel personalizado (un subconjunto de MiniJava) y realiza una traducción completa a un lenguaje ensamblador simulado.
+
+Como característica principal, el compilador también genera una representación visual del programa fuente en forma de **diagrama de flujo** utilizando la sintaxis DOT de Graphviz.
+
+## 📊 Diagrama de Flujo Generado
+
+Este es un ejemplo del diagrama de flujo (`program_flow.dot`) generado por el compilador al analizar un programa de `factorial` recursivo.
+
+*(**Nota:** Para que esto funcione, primero debes ejecutar el compilador, generar el archivo `diagrama.png` con Graphviz, y subir `diagrama.png` a tu carpeta `output/` en el repositorio).*
+
+![Diagrama de Flujo del Compilador](output/diagrama.png)
+
+## 🛠️ Stack Tecnológico
+
+* **Lenguaje Principal:** Java (JDK 11+)
+* **Visualización:** Graphviz (para renderizar el lenguaje DOT)
+* **IDE:** Visual Studio Code
+
+## 🚀 Cómo Ejecutar el Proyecto
+
+### 1. Prerrequisitos
+
+* **Java JDK 11** (o superior) debe estar instalado y configurado en el PATH.
+* **Graphviz (Motor DOT):** El compilador *genera* el archivo `.dot`, pero para *visualizarlo* (convertirlo a PNG), necesitas el motor de Graphviz.
+    1.  Descárgalo desde [graphviz.org/download/](https://graphviz.org/download/).
+    2.  **Importante:** Durante la instalación, asegúrate de marcar la casilla **"Add Graphviz to the system PATH"**.
+
+### 2. Compilar y Ejecutar
+
+El proyecto está diseñado para ser compilado y ejecutado desde la terminal (o un IDE configurado).
+
+```bash
+# 1. Compilar todo el código fuente Java
+javac -d bin src/compilador/**/*.java
+
+
+# 2. Ejecutar el compilador
+# (Esto leerá 'input/test.mj' y generará 'output/program.asm' y 'output/program_flow.dot')
+java -cp bin compilador.Main
+
