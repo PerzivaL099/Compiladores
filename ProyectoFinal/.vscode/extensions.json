@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    // La extensión que no necesita el motor (más fácil para el usuario)
+    "ijmacd.graphviz-preview-web",
+
+    // La extensión que instalaste (requiere el motor 'dot')
+    "stephanvs.dot", 
+
+    // Es bueno recomendar la extensión oficial de Java
+    "vscjava.vscode-java-pack" 
+  ]
+}
