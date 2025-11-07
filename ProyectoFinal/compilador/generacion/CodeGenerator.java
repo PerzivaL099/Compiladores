@@ -53,6 +53,37 @@ public class CodeGenerator {
             case "/":
                 translateArithmetic(cuad);
                 break;
+            
+            // --- INICIO DE CORRECCIONES ---
+            
+            // 1. AÑADIDO: Manejo de Operadores Relacionales
+            case "<":
+            case ">":
+            case "<=":
+            case ">=":
+            case "==":
+            case "!=":
+                translateRelational(cuad);
+                break;
+
+            // 2. AÑADIDO: Manejo de Llamadas a Función (PARAM)
+            case "PARAM":
+                translateParam(cuad);
+                break;
+                
+            // 3. AÑADIDO: Manejo de Llamadas a Función (CALL)
+            case "CALL":
+                translateCall(cuad);
+                break;
+
+            // 4. AÑADIDO: Manejo de Directivas (no generan código)
+            case "PARAM_IN":
+            case "END_FUNCTION":
+                assemblyCode.add("\t; (Directiva: " + cuad.operator + ")");
+                break;
+                
+            // --- FIN DE CORRECCIONES ---
+
             case "JUMPIF_FALSE":
                 translateJumpIfFalse(cuad);
                 break;
@@ -65,30 +96,21 @@ public class CodeGenerator {
             case "RETURN":
                 translateReturn(cuad);
                 break;
-            // ... (Otros operadores)
             default:
                 assemblyCode.add("\t; ERROR: Cuádrupla no implementada: " + cuad.operator);
         }
     }
     
     // ----------------------------------------------------------------
-    // EJEMPLOS DE TRADUCCIÓN
+    // MÉTODOS DE TRADUCCIÓN (Existentes)
     // ----------------------------------------------------------------
 
     private void translateAssign(Cuadrupla cuad) {
-        // Cuádrupla: (ASSIGN, op1, null, res) -> res = op1
-        
-        // 1. Cargar el valor (op1) a un registro temporal
         String srcRegister = loadValue(cuad.operand1, REG_T1);
-
-        // 2. Almacenar el valor del registro en la ubicación de la variable (res)
         storeValue(srcRegister, cuad.result);
     }
 
     private void translateArithmetic(Cuadrupla cuad) {
-        // Cuádrupla: (OP, op1, op2, res) -> res = op1 OP op2
-
-        // 1. Cargar operandos a registros
         String reg1 = loadValue(cuad.operand1, REG_T1);
         String reg2 = loadValue(cuad.operand2, REG_T2);
 
@@ -98,35 +120,95 @@ public class CodeGenerator {
             case "-": opCode = "SUB"; break;
             case "*": opCode = "MUL"; break;
             case "/": opCode = "DIV"; break;
-            default: opCode = "NOP"; // No Operation
+            default: opCode = "NOP";
         }
 
-        // 2. Realizar la operación y dejar el resultado en REG_RESULT
         assemblyCode.add(String.format("\t%s %s, %s, %s", opCode, REG_RESULT, reg1, reg2));
-
-        // 3. Almacenar el resultado (REG_RESULT) en la variable 'res' de la cuádrupla (que suele ser un temporal tX)
         storeValue(REG_RESULT, cuad.result);
     }
     
     private void translateJumpIfFalse(Cuadrupla cuad) {
-        // Cuádrupla: (JUMPIF_FALSE, cond, null, L_TARGET) -> IF cond==FALSE GOTO L_TARGET
-
-        // 1. Cargar la condición a un registro
         String condReg = loadValue(cuad.operand1, REG_T1);
-
-        // 2. Generar la instrucción de salto condicional (simulado: verifica si es 0/False)
-        assemblyCode.add(String.format("\tCMP %s, #0", condReg)); // Compara el registro con cero
-        assemblyCode.add(String.format("\tJUMPEQ %s", cuad.result)); // Si es igual a cero (falso), salta a la etiqueta
+        assemblyCode.add(String.format("\tCMP %s, #0", condReg)); 
+        assemblyCode.add(String.format("\tJUMPEQ %s", cuad.result));
     }
     
     private void translateReturn(Cuadrupla cuad) {
-        // 1. Cargar el valor de retorno al registro de resultado estándar (R0)
         loadValue(cuad.operand1, REG_RESULT);
-        
-        // 2. Simular el salto al final de la función para la limpieza (ya manejado por GOTO en InterCodeGenerator)
-        assemblyCode.add("\tRET"); // Instrucción de retorno simulada
+        assemblyCode.add("\tRET");
     }
 
+    // ----------------------------------------------------------------
+    // MÉTODOS DE TRADUCCIÓN (NUEVOS)
+    // ----------------------------------------------------------------
+
+    /**
+     * Traduce cuádruplas relacionales (ej. <, ==) a código ensamblador.
+     * El resultado (tX) será 1 si es verdadero, 0 si es falso.
+     */
+    private void translateRelational(Cuadrupla cuad) {
+        // Cuádrupla: (OP, op1, op2, res) -> res = (op1 OP op2)
+        String reg1 = loadValue(cuad.operand1, REG_T1);
+        String reg2 = loadValue(cuad.operand2, REG_T2);
+
+        String jumpInstruction;
+        switch (cuad.operator) {
+            case "<": jumpInstruction = "JUMPLT"; break; // Jump if Less Than
+            case ">": jumpInstruction = "JUMPGT"; break; // Jump if Greater Than
+            case "==": jumpInstruction = "JUMPEQ"; break; // Jump if Equal
+            case "!=": jumpInstruction = "JUMPNE"; break; // Jump if Not Equal
+            case "<=": jumpInstruction = "JUMPLE"; break; // Jump if Less/Equal
+            case ">=": jumpInstruction = "JUMPGE"; break; // Jump if Greater/Equal
+            default: jumpInstruction = "JUMP"; // No debería ocurrir
+        }
+
+        // Crear etiquetas únicas para el flujo
+        String labelTrue = "L_TRUE_" + (currentOffset); 
+        String labelEnd = "L_END_" + (currentOffset);
+
+        // 1. Comparar los dos registros
+        assemblyCode.add(String.format("\tCMP %s, %s", reg1, reg2));
+        // 2. Saltar a la etiqueta "True" si la condición se cumple
+        assemblyCode.add(String.format("\t%s %s", jumpInstruction, labelTrue));
+        
+        // 3. Rama "False": Cargar 0 (falso) en el resultado
+        assemblyCode.add(String.format("\tLOADI %s, #0", REG_RESULT));
+        assemblyCode.add(String.format("\tJUMP %s", labelEnd));
+        
+        // 4. Rama "True": Cargar 1 (verdadero) en el resultado
+        assemblyCode.add(labelTrue + ":");
+        assemblyCode.add(String.format("\tLOADI %s, #1", REG_RESULT));
+        
+        // 5. Fin
+        assemblyCode.add(labelEnd + ":");
+        // 6. Almacenar el resultado (1 o 0) en la variable temporal 'res'
+        storeValue(REG_RESULT, cuad.result);
+    }
+
+    /**
+     * Traduce la cuádrupla PARAM (simula empujar un argumento a la pila).
+     */
+    private void translateParam(Cuadrupla cuad) {
+        // Cuádrupla: (PARAM, op1, null, null)
+        String reg = loadValue(cuad.operand1, REG_T1);
+        // Simula empujar el parámetro a la pila de la función llamada
+        assemblyCode.add(String.format("\tPUSH %s", reg)); 
+    }
+
+    /**
+     * Traduce la cuádrupla CALL (salto a función).
+     */
+    private void translateCall(Cuadrupla cuad) {
+        // Cuádrupla: (CALL, "factorial", "1", "t2")
+        String functionName = cuad.operand1;
+        String numArgs = cuad.operand2; // No lo usamos, pero es bueno saberlo
+        String resultTemp = cuad.result;
+
+        assemblyCode.add(String.format("\tCALL %s", functionName));
+        
+        // Guardar el resultado (que la función dejó en R0)
+        storeValue(REG_RESULT, resultTemp);
+    }
 
     // ----------------------------------------------------------------
     // MÉTODOS DE MANEJO DE MEMORIA (SIMULADO)
@@ -140,11 +222,20 @@ public class CodeGenerator {
             assemblyCode.add(String.format("\tLOADI %s, #%d", targetReg, value)); // LOADI: Carga Inmediata
             return targetReg;
         } catch (NumberFormatException e) {
+            // Si es "true" o "false" (Manejado como 1 y 0)
+            if (operand.equals("true")) {
+                 assemblyCode.add(String.format("\tLOADI %s, #1", targetReg));
+                 return targetReg;
+            }
+            if (operand.equals("false")) {
+                 assemblyCode.add(String.format("\tLOADI %s, #0", targetReg));
+                 return targetReg;
+            }
+            
             // Si es una variable (ID o Temporal tX)
             if (!stackOffset.containsKey(operand)) {
-                // Asignar una nueva posición en el stack (para variables nuevas/temporales)
                 stackOffset.put(operand, currentOffset);
-                currentOffset += 4; // Avanzar 4 bytes (simulación de enteros de 32 bits)
+                currentOffset += 4; // Avanzar 4 bytes
             }
             int offset = stackOffset.get(operand);
             assemblyCode.add(String.format("\tLOAD %s, [SP + %d]", targetReg, offset)); // LOAD: Carga desde Stack Pointer (SP)
@@ -155,7 +246,6 @@ public class CodeGenerator {
     // Mapea y devuelve la instrucción de almacenamiento
     private void storeValue(String sourceReg, String targetVar) {
         if (!stackOffset.containsKey(targetVar)) {
-             // Asignar una nueva posición si la variable es nueva (como temporales)
             stackOffset.put(targetVar, currentOffset);
             currentOffset += 4;
         }

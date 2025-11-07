@@ -100,7 +100,6 @@ public class InterCodeGenerator implements ASTVisitor {
             // Cuádrupla de asignación: (ASSIGN, resultado_expr, null, ID)
             emit("ASSIGN", result, "null", node.id);
         }
-        // Si no hay inicialización, no se genera código intermedio.
         return null;
     }
 
@@ -126,18 +125,14 @@ public class InterCodeGenerator implements ASTVisitor {
         // Bloque THEN
         node.thenBranch.accept(this);
         
-        // Si hay ELSE, saltar el bloque ELSE
         if (node.elseBranch != null) {
             emit("GOTO", labelEnd, "null", "null");
         }
         
-        // Etiqueta ELSE/FIN del IF (si no hay ELSE, es el fin)
         emit("LABEL", labelFalse, "null", "null");
         
-        // Bloque ELSE
         if (node.elseBranch != null) {
             node.elseBranch.accept(this);
-            // Etiqueta de fin solo si había ELSE
             emit("LABEL", labelEnd, "null", "null"); 
         }
         
@@ -149,23 +144,11 @@ public class InterCodeGenerator implements ASTVisitor {
         String labelStart = newLabel();
         String labelEnd = newLabel();
 
-        // 1. Etiqueta de inicio del ciclo
         emit("LABEL", labelStart, "null", "null"); 
-
-        // 2. Generar código para la condición
         String conditionResult = (String) node.condition.accept(this);
-
-        // 3. JUMP al final si la condición es falsa
-        // JUMPIF_FALSE t_cond, null, L_END
         emit("JUMPIF_FALSE", conditionResult, "null", labelEnd);
-
-        // 4. Cuerpo del ciclo
         node.body.accept(this);
-        
-        // 5. GOTO de vuelta al inicio
         emit("GOTO", labelStart, "null", "null");
-        
-        // 6. Etiqueta de fin del ciclo
         emit("LABEL", labelEnd, "null", "null");
         
         return null;
@@ -173,13 +156,9 @@ public class InterCodeGenerator implements ASTVisitor {
 
     @Override
     public Object visit(ReturnStatement node) {
-        // 1. Visitar la expresión de retorno
         String result = (String) node.value.accept(this);
-        
-        // 2. Cuádrupla de RETORNO (el ensamblador usará esto para limpiar la pila)
         emit("RETURN", result, "null", "null");
         
-        // 3. GOTO a la etiqueta de fin de función (limpieza de stack, etc.)
         if (!returnLabels.isEmpty()) {
             emit("GOTO", returnLabels.peek(), "null", "null");
         }
@@ -193,14 +172,10 @@ public class InterCodeGenerator implements ASTVisitor {
 
     @Override
     public Object visit(BinaryExpression node) {
-        // 1. Visitar lados izquierdo y derecho
         String leftResult = (String) node.left.accept(this); 
         String rightResult = (String) node.right.accept(this);
-
-        // 2. Generar nuevo temporal para el resultado
         String resultTemp = newTemp();
         
-        // 3. Emitir cuádrupla: (OP, op1, op2, res)
         emit(node.operator.getLexeme(), leftResult, rightResult, resultTemp);
         
         return resultTemp; 
@@ -208,45 +183,40 @@ public class InterCodeGenerator implements ASTVisitor {
     
     @Override
     public Object visit(UnaryExpression node) {
-        // 1. Visitar el operando
         String operandResult = (String) node.operand.accept(this);
-        
-        // 2. Generar temporal
         String resultTemp = newTemp();
-        
-        // 3. Emitir cuádrupla: (OP, operando, null, res)
         emit(node.operator.getLexeme(), operandResult, "null", resultTemp);
-        
         return resultTemp; 
     }
     
+    // --- INICIO DE LA CORRECCIÓN ---
     @Override
     public Object visit(FunctionCall node) {
         // 1. Generar cuádruplas para los argumentos
         for (Expression arg : node.arguments) {
             String argResult = (String) arg.accept(this);
-            // PARAM arg_result, null, null, null
             emit("PARAM", argResult, "null", "null"); 
         }
         
         // 2. Generar temporal para almacenar el valor de retorno
         String resultTemp = newTemp();
         
-        // 3. Cuádrupla de llamada: (CALL, num_args, null, resultado)
-        emit("CALL", String.valueOf(node.arguments.size()), "null", resultTemp);
+        // 3. ¡CORRECCIÓN!
+        //    Pasamos el ID de la función (node.id) como operando 1.
+        //    (CALL, "factorial", "1", t2)
+        emit("CALL", node.id, String.valueOf(node.arguments.size()), resultTemp);
         
         return resultTemp;
     }
+    // --- FIN DE LA CORRECCIÓN ---
     
     @Override
     public Object visit(VariableAccess node) {
-        // No se genera código; simplemente se devuelve el nombre de la variable
         return node.id; 
     }
     
     @Override
     public Object visit(LiteralExpression node) {
-        // No se genera código; se devuelve el valor literal como String
         return node.value.toString(); 
     }
 }

@@ -7,13 +7,22 @@
 factorial:
 
 ; [PARAM_IN, 0, null, n]
-	; ERROR: Cuádrupla no implementada: PARAM_IN
+	; (Directiva: PARAM_IN)
 
 ; [<, n, 1, t0]
-	; ERROR: Cuádrupla no implementada: <
+	LOAD R1, [SP + 0]
+	LOADI R2, #1
+	CMP R1, R2
+	JUMPLT L_TRUE_4
+	LOADI R0, #0
+	JUMP L_END_4
+L_TRUE_4:
+	LOADI R0, #1
+L_END_4:
+	STORE R0, [SP + 4]
 
 ; [JUMPIF_FALSE, t0, null, L1]
-	LOAD R1, [SP + 0]
+	LOAD R1, [SP + 4]
 	CMP R1, #0
 	JUMPEQ L1
 
@@ -31,19 +40,21 @@ factorial:
 L1:
 
 ; [-, n, 1, t1]
-	LOAD R1, [SP + 4]
+	LOAD R1, [SP + 0]
 	LOADI R2, #1
 	SUB R0, R1, R2
 	STORE R0, [SP + 8]
 
 ; [PARAM, t1, null, null]
-	; ERROR: Cuádrupla no implementada: PARAM
+	LOAD R1, [SP + 8]
+	PUSH R1
 
-; [CALL, 1, null, t2]
-	; ERROR: Cuádrupla no implementada: CALL
+; [CALL, factorial, 1, t2]
+	CALL factorial
+	STORE R0, [SP + 12]
 
 ; [*, n, t2, t3]
-	LOAD R1, [SP + 4]
+	LOAD R1, [SP + 0]
 	LOAD R2, [SP + 12]
 	MUL R0, R1, R2
 	STORE R0, [SP + 16]
@@ -66,7 +77,7 @@ L2:
 L0:
 
 ; [END_FUNCTION, null, null, null]
-	; ERROR: Cuádrupla no implementada: END_FUNCTION
+	; (Directiva: END_FUNCTION)
 
 ; [LABEL, main, null, null]
 main:
@@ -79,7 +90,16 @@ main:
 L4:
 
 ; [>, x, 0, t4]
-	; ERROR: Cuádrupla no implementada: >
+	LOAD R1, [SP + 24]
+	LOADI R2, #0
+	CMP R1, R2
+	JUMPGT L_TRUE_28
+	LOADI R0, #0
+	JUMP L_END_28
+L_TRUE_28:
+	LOADI R0, #1
+L_END_28:
+	STORE R0, [SP + 28]
 
 ; [JUMPIF_FALSE, t4, null, L5]
 	LOAD R1, [SP + 28]
@@ -87,10 +107,12 @@ L4:
 	JUMPEQ L5
 
 ; [PARAM, x, null, null]
-	; ERROR: Cuádrupla no implementada: PARAM
+	LOAD R1, [SP + 24]
+	PUSH R1
 
-; [CALL, 1, null, t5]
-	; ERROR: Cuádrupla no implementada: CALL
+; [CALL, factorial, 1, t5]
+	CALL factorial
+	STORE R0, [SP + 32]
 
 ; [ASSIGN, t5, null, resultado]
 	LOAD R1, [SP + 32]
@@ -127,4 +149,4 @@ L5:
 L3:
 
 ; [END_FUNCTION, null, null, null]
-	; ERROR: Cuádrupla no implementada: END_FUNCTION
+	; (Directiva: END_FUNCTION)
