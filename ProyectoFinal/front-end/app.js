@@ -1,49 +1,79 @@
-// Espera a que la página cargue
+// --- app.js CORREGIDO Y FINAL ---
+
+// Definimos las variables globales necesarias fuera del listener
+let sourceCodeEditor;
+let compileButton;
+
+// Esperamos a que todo el DOM esté cargado antes de inicializar el editor y adjuntar eventos
 document.addEventListener("DOMContentLoaded", () => {
     
-    // Selecciona los elementos de la página
-    const compileButton = document.getElementById('compileButton');
-    const sourceCodeEl = document.getElementById('sourceCode');
-    const asmOutputEl = document.getElementById('asmOutput');
-    const dotOutputEl = document.getElementById('dotOutput');
-    const errorOutputEl = document.getElementById('errorOutput');
+    // 1. Inicializa el editor CodeMirror AHORA que el contenedor existe
+    sourceCodeEditor = CodeMirror(document.getElementById('codeEditorContainer'), {
+        value: "// Pega tu código de MiniJava aquí...",
+        mode: "clike", // Resaltado de sintaxis para C/Java
+        lineNumbers: true,
+        theme: "default"
+    });
 
-    // Escucha el clic en el botón
+    // 2. Referencias a los elementos de salida (Ahora que sabemos que existen)
+    compileButton = document.getElementById('compileButton');
+    const asmOutputEl = document.getElementById('asmOutput');
+    // NOTA: Eliminamos la búsqueda del elemento 'dotOutput' ya que era nulo en el HTML.
+    // Lo manejaremos con diagramContainer.
+    const errorOutputEl = document.getElementById('errorOutput');
+    const diagramContainer = document.getElementById('diagramContainer'); 
+    
+    // --- FUNCIÓN DE RENDERIZADO DE DIAGRAMA ---
+    function renderDiagram(dotString) {
+        diagramContainer.innerHTML = ''; 
+        try {
+            if (typeof Viz === 'undefined') {
+                 diagramContainer.innerText = "Error: La librería Viz.js no se cargó correctamente.";
+                 return;
+            }
+            const svgString = Viz(dotString, { format: "svg" }); 
+            diagramContainer.innerHTML = svgString;
+        } catch (e) {
+            // Muestra el error de renderizado en la consola y en el contenedor
+            diagramContainer.innerHTML = `<pre style="color: red;">Error al renderizar. Revisa el código DOT:\n${dotString}</pre>`;
+            console.error("Error de Viz.js:", e);
+        }
+    }
+
+    // --- FUNCIÓN PRINCIPAL DE COMPILACIÓN (Attach Listener) ---
     compileButton.addEventListener('click', async () => {
         
-        // Limpiar salidas anteriores
+        // Limpiar salidas
         asmOutputEl.value = '';
-        dotOutputEl.value = '';
         errorOutputEl.innerText = '';
+        diagramContainer.innerHTML = ''; // Limpiamos el contenedor del diagrama
 
-        // 1. Obtener el código fuente del textarea
-        const code = sourceCodeEl.value;
+        // Obtener el código de CodeMirror
+        const code = sourceCodeEditor.getValue(); 
 
         try {
-            // 2. Enviar el código al servidor Java (Back-End)
-            // (Asegúrate de que tu Main.java esté corriendo en el puerto 4567)
+            // 1. Enviar el código al servidor Java (Back-End)
             const response = await fetch('http://localhost:4567/compile', {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain' },
                 body: code
             });
 
-            const result = await response.json(); // Esperar el JSON
+            const result = await response.json(); 
 
-            // 3. Mostrar los resultados
+            // 2. Procesar y mostrar los resultados
             if (result.error) {
-                // Mostrar error de compilación
                 errorOutputEl.innerText = result.error;
             } else {
-                // Mostrar éxito
+                // Éxito: Mostrar ensamblador y código DOT
                 asmOutputEl.value = result.asmCode;
-                dotOutputEl.value = result.dotCode;
                 
-                // (Opcional: Aquí podrías usar Viz.js para renderizar el result.dotCode)
+                // Renderizar el diagrama (USANDO EL CONTENEDOR CORRECTO)
+                renderDiagram(result.dotCode);
             }
         } catch (e) {
-            // Error si el servidor Java no está corriendo
-            errorOutputEl.innerText = 'Error de conexión: ¿Está el servidor Java (Main.java) en ejecución? \nDetalle: ' + e.message;
+            errorOutputEl.innerText = 'Error de conexión con el servidor: ¿Está el servidor Java (Main.java) en ejecución? \nDetalle: ' + e.message;
         }
     });
-});
+
+}); // <--- CIERRE DEL DOMContentLoaded
