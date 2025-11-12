@@ -19,14 +19,27 @@ import java.util.Map;
 @SuppressWarnings("rawtypes") // Suprimir advertencias de tipo crudo
 public class DiagramGenerator implements ASTVisitor {
 
-    private final StringBuilder dotCode = new StringBuilder();
-    private int nodeCounter = 0;
-    
-    // Almacena el nombre del nodo de INICIO y FIN de un bloque de sentencias
-    // <Key: Nodo AST (ej. IfStatement), Value: [Nodo_Inicio, Nodo_Fin]>
-    private final Map<ASTNode, String[]> nodeRegistry = new HashMap<>();
+    // --- INICIO DE CORRECCIÓN 1: Mover variables de estado ---
+    // Se mueven de 'final' para poder reiniciarlas en cada llamada
+    private StringBuilder dotCode;
+    private int nodeCounter;
+    private Map<ASTNode, String[]> nodeRegistry;
+    // --- FIN DE CORRECCIÓN 1 ---
 
-    public void generate(Program program, String filename) throws IOException {
+    // --- INICIO DE CORRECCIÓN 2: Nuevo método para el Servidor Web ---
+    /**
+     * Genera el código DOT como un String, sin escribir a disco.
+     * Este método es llamado por CompilerService.
+     * @param program El nodo raíz del AST
+     * @return El código DOT como un String.
+     */
+    public String generateDotString(Program program) {
+        // Reiniciar el estado para cada compilación (¡CRUCIAL para un servidor!)
+        this.dotCode = new StringBuilder();
+        this.nodeCounter = 0;
+        this.nodeRegistry = new HashMap<>();
+
+        // Lógica de generación (movida desde el método 'generate')
         dotCode.append("digraph FlowChart {\n");
         dotCode.append("\trankdir=TB; // De Arriba a Abajo\n");
         dotCode.append("\tnode [shape=box, style=\"rounded\"];\n"); 
@@ -35,11 +48,28 @@ public class DiagramGenerator implements ASTVisitor {
         program.accept(this);
 
         dotCode.append("}\n");
-
-        try (FileWriter writer = new FileWriter(filename)) {
-            writer.write(dotCode.toString());
-        }
+        
+        return dotCode.toString();
     }
+    // --- FIN DE CORRECCIÓN 2 ---
+
+    // --- INICIO DE CORRECCIÓN 3: Refactorizar método antiguo ---
+    /**
+     * Genera el código DOT y lo escribe a un archivo.
+     * (Usado por el Main.java de línea de comandos original)
+     */
+    public void generate(Program program, String filename) throws IOException {
+        // Ahora llama al nuevo método para obtener el string
+        String dotResult = this.generateDotString(program);
+        
+        // Escribe el string resultante al archivo
+        try (FileWriter writer = new FileWriter(filename)) {
+            writer.write(dotResult);
+        }
+        
+        // (La salida de consola se movió a Main.java, pero puede quedar aquí)
+    }
+    // --- FIN DE CORRECCIÓN 3 ---
     
     // --- Utilidades DOT ---
     
@@ -47,23 +77,18 @@ public class DiagramGenerator implements ASTVisitor {
         return "N" + (nodeCounter++);
     }
     
-    // Define el nodo en DOT
     private void defineNode(String name, String label, String shape, String color) {
         label = label.replace("\"", "'").replace("\n", "\\n").replace(";", ""); 
         dotCode.append(String.format("\t%s [label=\"%s\", shape=%s, color=\"%s\"];\n", name, label, shape, color));
     }
     
-    // Define una conexión/arista en DOT
     private void defineEdge(String from, String to, String label) {
         dotCode.append(String.format("\t%s -> %s [label=\"%s\"];\n", from, to, label));
     }
 
-    // --- MÉTODOS DE VISITA (Lógica de Dibujo) ---
+    // --- MÉTODOS DE VISITA (Sin cambios) ---
+    // (Tu implementación completa de todos los métodos 'visit' va aquí)
 
-    // =================================================================
-    // I. DECLARACIONES
-    // =================================================================
-    
     @Override
     public Object visit(Program node) {
         String startNode = getNextNodeName();
@@ -74,7 +99,6 @@ public class DiagramGenerator implements ASTVisitor {
             String funcStart = (String) func.accept(this);
             defineEdge(lastNode, funcStart, "");
             
-            // Obtenemos el nodo final del cuerpo de la función
             String funcEnd = nodeRegistry.get(func.body)[1];
             lastNode = funcEnd; 
         }
@@ -90,49 +114,34 @@ public class DiagramGenerator implements ASTVisitor {
         String funcName = getNextNodeName();
         defineNode(funcName, "FUNCIÓN: " + node.id, "invhouse", "blue");
         
-        // Visitamos el cuerpo (que es un BlockStatement)
         String bodyStart = (String) node.body.accept(this);
         defineEdge(funcName, bodyStart, "Entry");
         
-        return funcName; // Devolvemos el nombre del nodo de INICIO de esta función
+        return funcName;
     }
 
     @Override
-    public Object visit(Parameter node) { return null; } // No se dibujan
+    public Object visit(Parameter node) { return null; }
     
-    // =================================================================
-    // II. SENTENCIAS (FLUJO Y SECUENCIA)
-    // =NOTAS: 
-    // - Los métodos visit(Sentencia) DEBEN devolver el nombre del NODO DE INICIO.
-    // - También DEBEN registrar su NODO DE FIN en nodeRegistry.
-    // =================================================================
-
     @Override
     public Object visit(BlockStatement node) {
         String startNode = getNextNodeName();
         String endNode = getNextNodeName();
-        
-        // Registra el inicio y el fin del bloque
         nodeRegistry.put(node, new String[]{startNode, endNode});
         
-        // Nodo "fantasma" de inicio de bloque
         defineNode(startNode, "BlockStart", "point", "white");
         defineNode(endNode, "BlockEnd", "point", "white");
 
         String lastNode = startNode;
         
         for (ASTNode stmt : node.statements) {
-            String stmtStart = (String) stmt.accept(this); // Visita y obtiene la etiqueta de inicio
+            String stmtStart = (String) stmt.accept(this);
             defineEdge(lastNode, stmtStart, "");
-            
-            // Obtenemos el nodo final de la sentencia que acabamos de visitar
             lastNode = nodeRegistry.get(stmt)[1];
         }
         
-        // Conectar el último nodo del bloque al nodo final del bloque
         defineEdge(lastNode, endNode, "");
-        
-        return startNode; // Devuelve el nodo de INICIO
+        return startNode;
     }
 
     @Override
@@ -142,7 +151,6 @@ public class DiagramGenerator implements ASTVisitor {
                        (node.initialValue != null ? " = ..." : "");
         defineNode(name, label, "box", "green");
         
-        // El inicio y el fin son el mismo nodo
         nodeRegistry.put(node, new String[]{name, name}); 
         return name;
     }
@@ -162,18 +170,16 @@ public class DiagramGenerator implements ASTVisitor {
         String condNode = getNextNodeName();
         defineNode(condNode, "IF: ...", "diamond", "red"); 
 
-        String joinNode = getNextNodeName(); // Punto de confluencia
+        String joinNode = getNextNodeName();
         defineNode(joinNode, "", "point", "white"); 
         
         nodeRegistry.put(node, new String[]{condNode, joinNode});
 
-        // Rama THEN
         String thenStart = (String) node.thenBranch.accept(this);
         String thenEnd = nodeRegistry.get(node.thenBranch)[1];
         defineEdge(condNode, thenStart, "True");
         defineEdge(thenEnd, joinNode, "");
 
-        // Rama ELSE
         if (node.elseBranch != null) {
             String elseStart = (String) node.elseBranch.accept(this);
             String elseEnd = nodeRegistry.get(node.elseBranch)[1];
@@ -183,7 +189,7 @@ public class DiagramGenerator implements ASTVisitor {
             defineEdge(condNode, joinNode, "False");
         }
         
-        return condNode; // Devuelve el nodo de inicio del IF
+        return condNode;
     }
 
     @Override
@@ -191,19 +197,17 @@ public class DiagramGenerator implements ASTVisitor {
         String condNode = getNextNodeName();
         defineNode(condNode, "WHILE: ...", "diamond", "red"); 
 
-        String joinNode = getNextNodeName(); // Nodo de salida (si es Falso)
+        String joinNode = getNextNodeName(); 
         defineNode(joinNode, "", "point", "white");
         
         nodeRegistry.put(node, new String[]{condNode, joinNode});
 
-        // Visitar cuerpo
         String bodyStart = (String) node.body.accept(this);
         String bodyEnd = nodeRegistry.get(node.body)[1];
         
-        // Conexiones de flujo
         defineEdge(condNode, bodyStart, "True");
-        defineEdge(bodyEnd, condNode, "Loop"); // Bucle de vuelta a la condición
-        defineEdge(condNode, joinNode, "False"); // Salida del bucle
+        defineEdge(bodyEnd, condNode, "Loop"); 
+        defineEdge(condNode, joinNode, "False"); 
         
         return condNode; 
     }
@@ -215,10 +219,6 @@ public class DiagramGenerator implements ASTVisitor {
         nodeRegistry.put(node, new String[]{name, name});
         return name;
     }
-
-    // =================================================================
-    // III. EXPRESIONES (No se dibujan, solo se implementa el stub)
-    // =================================================================
 
     @Override
     public Object visit(BinaryExpression node) { return null; }
