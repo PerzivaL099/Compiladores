@@ -1,0 +1,12 @@
+{
+    "java.project.referencedLibraries": {
+        "include": [
+            "lib/**/*.jar"
+        ],
+        "exclude": [
+            "lib/gson-2.10.1-javadoc.jar",
+            "lib/slf4j-simple-1.7.30-javadoc.jar",
+            "lib/spark-core-2.9.4-javadoc.jar"
+        ]
+    }
+}

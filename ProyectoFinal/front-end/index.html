@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Compilador Web</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; height: 95vh; margin: 10px; }
+        .panel { flex: 1; padding: 10px; display: flex; flex-direction: column; border-left: 1px solid #ccc; }
+        .panel:first-child { border-left: none; }
+        textarea { width: 98%; flex-grow: 1; font-family: "Courier New", Courier, monospace; font-size: 14px; border: 1px solid #ddd; }
+        h3 { margin-top: 0; }
+        button { background-color: #007acc; color: white; border: none; padding: 10px 15px; font-size: 16px; cursor: pointer; }
+        button:hover { background-color: #005f9e; }
+        pre { background-color: #f4f4f4; border: 1px solid #ddd; padding: 10px; color: red; white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+
+    <div class="panel">
+        <h3>Código Fuente (MiniJava)</h3>
+        <textarea id="sourceCode" rows="20">
+// Pega tu código de 'test.mj' aquí
+
+int factorial(int n) {
+    if (n < 1) {
+        return 1;
+    } else {
+        int temp;
+        temp = n * factorial(n - 1); 
+        return temp;
+    }
+}
+
+int main() {
+    int x;
+    x = 5;
+    while (x > 0) {
+        x = x - 1; 
+    }
+    return x; 
+}
+        </textarea>
+        <button id="compileButton">Compilar y Ejecutar</button>
+        <h3>Errores de Compilación:</h3>
+        <pre id="errorOutput"></pre>
+    </div>
+
+    <div class="panel">
+        <h3>Salida Ensamblador (.asm)</h3>
+        <textarea id="asmOutput" readonly></textarea>
+        <h3>Salida Diagrama (.dot)</h3>
+        <textarea id="dotOutput" readonly></textarea>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
