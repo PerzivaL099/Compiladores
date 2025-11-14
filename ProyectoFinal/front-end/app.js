@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
     compileButton = document.getElementById('compileButton');
     const asmOutputEl = document.getElementById('asmOutput');
     // NOTA: Eliminamos la búsqueda del elemento 'dotOutput' ya que era nulo en el HTML.
-    // Lo manejaremos con diagramContainer.
     const errorOutputEl = document.getElementById('errorOutput');
     const diagramContainer = document.getElementById('diagramContainer'); 
     
@@ -53,26 +52,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
             // 1. Enviar el código al servidor Java (Back-End)
-            const response = await fetch('http://localhost:4567/compile', {
+            const response = await fetch('http://127.0.0.1:4567/compile', {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain' },
-                body: code
+                body: code,
+                credentials: 'include' // Asegura que las cookies se envíen si es necesario
             });
 
             const result = await response.json(); 
 
             // 2. Procesar y mostrar los resultados
             if (result.error) {
-                errorOutputEl.innerText = result.error;
+                // Mostrar error de compilación en el registro
+                errorOutputEl.innerText = `❌ ERROR DE COMPILACIÓN: \n${result.error}`;
             } else {
                 // Éxito: Mostrar ensamblador y código DOT
                 asmOutputEl.value = result.asmCode;
                 
-                // Renderizar el diagrama (USANDO EL CONTENEDOR CORRECTO)
+                // Renderizar el diagrama
                 renderDiagram(result.dotCode);
+
+                // AÑADIDO: Mostrar mensaje de éxito en el registro de estatus
+                errorOutputEl.innerText = '✅ Compilación y generación exitosa. Servidor OK.';
             }
         } catch (e) {
-            errorOutputEl.innerText = 'Error de conexión con el servidor: ¿Está el servidor Java (Main.java) en ejecución? \nDetalle: ' + e.message;
+            errorOutputEl.innerText = '❌ Error de conexión con el servidor: ¿Está el servidor Java (Main.java) en ejecución? \nDetalle: ' + e.message;
         }
     });
 

@@ -1,0 +1,106 @@
+/* 1. Reset Global y Estructura Principal */
+body { 
+    margin: 0; 
+    padding: 0; 
+    background-color: #e8e8e8;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    display: flex; 
+    flex-direction: column; 
+    height: 100vh; 
+}
+
+/* 2. Encabezado principal */
+header {
+    background-color: #333;
+    color: white;
+    padding: 15px 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0; 
+}
+h1 { margin: 0; font-size: 1.5em; }
+
+/* --- CORRECCIÓN CLAVE --- */
+/* 3. Contenedor Principal (Grid Layout 1fr 1fr 1fr) */
+#app-container { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr 1fr; /* Tres columnas iguales */
+    flex-grow: 1; 
+    width: 100%;
+}
+
+/* 4. Columna de Input (Izquierda) */
+#input-column { 
+    padding: 20px; 
+    border-right: 1px solid #ddd; 
+    background-color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; 
+}
+
+/* 5. Columna de Ensamblador (Medio - NUEVA ID) */
+#asm-output-column { /* Nuevo Contenedor */
+    padding: 20px; 
+    border-right: 1px solid #ddd; /* Añadimos borde al medio */
+    background-color: #fbfbfb;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+/* 6. Columna de Diagrama (Derecha - NUEVA ID) */
+#diagram-output-column { /* Nuevo Contenedor */
+    padding: 20px; 
+    background-color: #fcfcfc;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+/* --- FIN CORRECCIÓN CLAVE --- */
+
+
+/* 7. Estilo CodeMirror */
+.CodeMirror { 
+    border: 1px solid #333; 
+    height: 100%; /* Ocupa toda la altura disponible en la columna */
+    font-size: 14px; 
+    flex-grow: 1;
+    margin-bottom: 15px;
+}
+
+/* 8. Ensamblador */
+#asmOutput { 
+    flex-grow: 1; 
+    min-height: 150px; 
+    resize: none; /* Quitamos la opción de redimensionar */
+    height: 100%; /* Ocupa la altura del contenedor */
+}
+
+/* 9. Estilo de Diagrama */
+#diagramContainer { 
+    flex-grow: 1; 
+    min-height: 200px;
+    overflow: auto; 
+    background-color: white; 
+    border: 1px solid #eee;
+}
+
+/* 10. Botones y Errores */
+#compileButton { 
+    background-color: #4CAF50; 
+    color: white; 
+    border: none; 
+    padding: 10px 15px; 
+    font-size: 16px; 
+    cursor: pointer; 
+    margin-bottom: 15px;
+}
+#errorOutput { 
+    background-color: #f8f8f8; 
+    border: 1px solid #ccc;     
+    color: #333;                
+    padding: 10px; 
+    margin-top: 10px;
+    min-height: 30px;
+}
+h3 { margin: 0 0 10px 0; font-size: 1.2em; color: #333; }

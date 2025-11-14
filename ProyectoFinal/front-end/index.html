@@ -2,47 +2,43 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Compilador Web</title>
+    <title>Traductor de MiniJava a Ensamblador</title>
+    
+    <link rel="stylesheet" href="style.css"> 
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/viz.js@1.8.0/viz.js"></script>
     
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; height: 98vh; margin: 0; }
-        .panel { flex: 1; padding: 10px; display: flex; flex-direction: column; border-right: 1px solid #ccc; }
-        .panel:last-child { border-right: none; }
-        .CodeMirror { border: 1px solid #ddd; height: 350px; font-size: 14px; }
-        #diagramContainer { flex-grow: 1; overflow: auto; border: 1px solid #ddd; padding: 10px; }
-        button { background-color: #007acc; color: white; border: none; padding: 10px 15px; font-size: 16px; cursor: pointer; margin-top: 10px; }
-        button:hover { background-color: #005f9e; }
-        pre { background-color: #f4f4f4; border: 1px solid #ddd; padding: 10px; color: red; white-space: pre-wrap; word-wrap: break-word; }
-        textarea { flex-grow: 1; font-family: monospace; font-size: 14px; margin-bottom: 10px;}
-        .output-box { display: flex; flex-direction: column; height: 50%; }
-        .output-box h3 { margin: 5px 0; }
-    </style>
 </head>
 <body>
-
-    <div class="panel">
-        <h3>Código Fuente (MiniJava)</h3>
-        <div id="codeEditorContainer"></div> <button id="compileButton">Compilar y Ejecutar</button>
-        <h3>Errores de Compilación:</h3>
-        <pre id="errorOutput"></pre>
-    </div>
-
-    <div class="panel">
+    <header>
+        <h1>Traductor de MiniJava a Ensamblador</h1>
+    </header>
+    
+    <div id="app-container">
         
-        <div class="output-box">
+        <div id="input-column">
+            <h3>Código Fuente (MiniJava)</h3>
+            <div id="codeEditorContainer"></div>
+            
+            <button id="compileButton">Compilar y Ejecutar</button>
+            
+            <h3>Errores de Compilación:</h3>
+            <pre id="errorOutput"></pre>
+        </div>
+
+        <div id="asm-output-column">
             <h3>Salida Ensamblador (.asm)</h3>
             <textarea id="asmOutput" readonly></textarea>
         </div>
-        
-        <div class="output-box">
+
+        <div id="diagram-output-column">
             <h3>Diagrama de Flujo</h3>
-            <div id="diagramContainer"></div> </div>
+            <div id="diagramContainer"></div> 
+        </div>
+        
     </div>
 
     <script src="app.js"></script>

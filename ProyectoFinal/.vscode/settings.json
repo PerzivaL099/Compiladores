@@ -8,5 +8,7 @@
             "lib/slf4j-simple-1.7.30-javadoc.jar",
             "lib/spark-core-2.9.4-javadoc.jar"
         ]
-    }
+    },
+    "maven.view": "flat",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
