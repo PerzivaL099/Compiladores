@@ -1,83 +1,164 @@
-// --- app.js CORREGIDO Y FINAL ---
+// app.js - Maneja el compilador MiniJava
 
-// Definimos las variables globales necesarias fuera del listener
+// Variable para evitar compilaciones múltiples
+let isCompiling = false;
 let sourceCodeEditor;
-let compileButton;
 
-// Esperamos a que todo el DOM esté cargado antes de inicializar el editor y adjuntar eventos
 document.addEventListener("DOMContentLoaded", () => {
     
-    // 1. Inicializa el editor CodeMirror AHORA que el contenedor existe
-    sourceCodeEditor = CodeMirror(document.getElementById('codeEditorContainer'), {
-        value: "// Pega tu código de MiniJava aquí...",
-        mode: "clike", // Resaltado de sintaxis para C/Java
-        lineNumbers: true,
-        theme: "default"
-    });
-
-    // 2. Referencias a los elementos de salida (Ahora que sabemos que existen)
-    compileButton = document.getElementById('compileButton');
+    // Referencias a elementos del DOM
+    const codeEditorContainer = document.getElementById('codeEditorContainer');
+    const compileButton = document.getElementById('compileButton');
     const asmOutputEl = document.getElementById('asmOutput');
-    // NOTA: Eliminamos la búsqueda del elemento 'dotOutput' ya que era nulo en el HTML.
     const errorOutputEl = document.getElementById('errorOutput');
-    const diagramContainer = document.getElementById('diagramContainer'); 
+    const diagramContainer = document.getElementById('diagramContainer');
+    
+    // Inicializar CodeMirror
+    if (codeEditorContainer) {
+        sourceCodeEditor = CodeMirror(codeEditorContainer, {
+            value: "// Pega tu código de MiniJava aquí...\nint x;\nx = 5;",
+            mode: "clike",
+            lineNumbers: true,
+            theme: "default"
+        });
+        console.log('✅ Editor CodeMirror inicializado');
+    }
     
     // --- FUNCIÓN DE RENDERIZADO DE DIAGRAMA ---
     function renderDiagram(dotString) {
+        if (!diagramContainer) {
+            console.warn('⚠️ No se encontró el contenedor del diagrama');
+            return;
+        }
+        
         diagramContainer.innerHTML = ''; 
+        
         try {
             if (typeof Viz === 'undefined') {
-                 diagramContainer.innerText = "Error: La librería Viz.js no se cargó correctamente.";
-                 return;
+                diagramContainer.innerText = "Error: La librería Viz.js no se cargó correctamente.";
+                console.error('❌ Viz.js no está disponible');
+                return;
             }
+            
             const svgString = Viz(dotString, { format: "svg" }); 
             diagramContainer.innerHTML = svgString;
+            console.log('✅ Diagrama renderizado correctamente');
+            
         } catch (e) {
-            // Muestra el error de renderizado en la consola y en el contenedor
-            diagramContainer.innerHTML = `<pre style="color: red;">Error al renderizar. Revisa el código DOT:\n${dotString}</pre>`;
-            console.error("Error de Viz.js:", e);
+            diagramContainer.innerHTML = `<pre style="color: red;">Error al renderizar DOT:\n${e.message}\n\nCódigo DOT:\n${dotString}</pre>`;
+            console.error("❌ Error de Viz.js:", e);
         }
     }
 
-    // --- FUNCIÓN PRINCIPAL DE COMPILACIÓN (Attach Listener) ---
-    compileButton.addEventListener('click', async () => {
+    // --- FUNCIÓN PRINCIPAL DE COMPILACIÓN ---
+    if (compileButton && sourceCodeEditor) {
         
-        // Limpiar salidas
-        asmOutputEl.value = '';
-        errorOutputEl.innerText = '';
-        diagramContainer.innerHTML = ''; // Limpiamos el contenedor del diagrama
-
-        // Obtener el código de CodeMirror
-        const code = sourceCodeEditor.getValue(); 
-
-        try {
-            // 1. Enviar el código al servidor Java (Back-End)
-            const response = await fetch('http://127.0.0.1:4567/compile', {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: code,
-                credentials: 'include' // Asegura que las cookies se envíen si es necesario
-            });
-
-            const result = await response.json(); 
-
-            // 2. Procesar y mostrar los resultados
-            if (result.error) {
-                // Mostrar error de compilación en el registro
-                errorOutputEl.innerText = `❌ ERROR DE COMPILACIÓN: \n${result.error}`;
-            } else {
-                // Éxito: Mostrar ensamblador y código DOT
-                asmOutputEl.value = result.asmCode;
-                
-                // Renderizar el diagrama
-                renderDiagram(result.dotCode);
-
-                // AÑADIDO: Mostrar mensaje de éxito en el registro de estatus
-                errorOutputEl.innerText = '✅ Compilación y generación exitosa. Servidor OK.';
+        compileButton.addEventListener('click', async (e) => {
+             e.preventDefault();
+             e.stopPropagation();
+            // Prevenir compilaciones múltiples
+            if (isCompiling) {
+                console.log('⏳ Ya hay una compilación en progreso...');
+                return;
             }
-        } catch (e) {
-            errorOutputEl.innerText = '❌ Error de conexión con el servidor: ¿Está el servidor Java (Main.java) en ejecución? \nDetalle: ' + e.message;
-        }
-    });
+            
+            isCompiling = true;
+            compileButton.disabled = true;
+            compileButton.textContent = 'Compilando...';
+            
+            // Limpiar salidas
+            if (asmOutputEl) asmOutputEl.value = '';
+            if (errorOutputEl) {
+                errorOutputEl.innerText = 'Compilando...';
+                errorOutputEl.style.color = 'blue';
+            }
+            if (diagramContainer) diagramContainer.innerHTML = '';
 
-}); // <--- CIERRE DEL DOMContentLoaded
+            // Obtener el código de CodeMirror
+            const code = sourceCodeEditor.getValue(); 
+
+            try {
+                console.log('📝 Enviando código al servidor...');
+                console.log('Código a compilar:', code.substring(0, 100) + '...');
+                
+                // Enviar el código al servidor Java
+                const response = await fetch('http://127.0.0.1:4567/compile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: code,
+                    credentials: 'include'
+                });
+
+                console.log('📡 Respuesta recibida - Status:', response.status);
+                
+                const result = await response.json();
+                console.log('📦 Resultado completo:', result);
+                console.log('   - success:', result.success);
+                console.log('   - asmCode length:', result.asmCode ? result.asmCode.length : 0);
+                console.log('   - dotCode length:', result.dotCode ? result.dotCode.length : 0);
+                console.log('   - error:', result.error);
+
+                // Procesar resultados
+                if (response.ok && result.success) {
+                    // Compilación exitosa
+                    console.log('✅ Compilación exitosa');
+                    
+                    if (result.asmCode) {
+                        asmOutputEl.value = result.asmCode;
+                        console.log('✅ Ensamblador mostrado');
+                    } else {
+                        console.warn('⚠️ No hay código ensamblador en la respuesta');
+                    }
+                    
+                    if (result.dotCode) {
+                        renderDiagram(result.dotCode);
+                    } else {
+                        console.warn('⚠️ No hay diagrama DOT en la respuesta');
+                    }
+
+                    if (errorOutputEl) {
+                        errorOutputEl.innerText = '✅ Compilación y generación exitosa.';
+                        errorOutputEl.style.color = 'green';
+                    }
+                    
+                } else if (response.status === 401) {
+                    // Sesión expirada
+                    console.warn('⚠️ Sesión expirada');
+                    if (errorOutputEl) {
+                        errorOutputEl.innerText = '⚠️ Sesión expirada. Redirigiendo al login...';
+                        errorOutputEl.style.color = 'orange';
+                    }
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                    
+                } else {
+                    // Error de compilación
+                    console.error('❌ Error de compilación:', result.error);
+                    if (errorOutputEl) {
+                        errorOutputEl.innerText = `❌ ERROR DE COMPILACIÓN:\n${result.error || 'Error desconocido'}`;
+                        errorOutputEl.style.color = 'red';
+                    }
+                }
+                
+            } catch (e) {
+                console.error('💥 Error de conexión:', e);
+                if (errorOutputEl) {
+                    errorOutputEl.innerText = '❌ Error de conexión con el servidor: ¿Está el servidor Java en ejecución?\nDetalle: ' + e.message;
+                    errorOutputEl.style.color = 'red';
+                }
+            } finally {
+                // Restaurar estado del botón
+                isCompiling = false;
+                compileButton.disabled = false;
+                compileButton.textContent = 'Compilar y Ejecutar';
+            }
+        });
+        
+        console.log('✅ Sistema de compilación inicializado');
+        
+    } else {
+        console.error('❌ No se pudo inicializar el compilador. Verifica que existan los elementos necesarios.');
+    }
+
+}); // Fin DOMContentLoaded

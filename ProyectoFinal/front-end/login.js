@@ -1,32 +1,47 @@
+// login.js - Maneja la autenticación de usuarios
+
 document.addEventListener('DOMContentLoaded', () => {
     const loginButton = document.getElementById('loginButton');
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const messageDiv = document.getElementById('message');
 
-    loginButton.addEventListener('click', async () => {
-        
+    // Función de login
+    const performLogin = async () => {
         const username = usernameInput.value;
         const password = passwordInput.value;
         messageDiv.innerText = ''; // Limpiar mensajes
 
+        // Validación básica
+        if (!username || !password) {
+            messageDiv.style.color = 'red';
+            messageDiv.innerText = 'Por favor ingrese usuario y contraseña.';
+            return;
+        }
+
         const payload = JSON.stringify({ username: username, password: password });
 
-       try {
-            // 1. Enviar las credenciales al servidor
+        try {
+            console.log('🔐 Intentando login con usuario:', username);
+
+            // Enviar las credenciales al servidor
             const response = await fetch('http://127.0.0.1:4567/login', {
                 method: 'POST',
-                // Indispensable para que el servidor Java sepa que el cuerpo es JSON
-                headers: { 'Content-Type': 'application/json' }, 
+                headers: { 
+                    'Content-Type': 'application/json'
+                }, 
                 body: payload,
-                // Crucial para enviar y recibir la cookie de sesión entre diferentes puertos
-                credentials: 'include' 
+                credentials: 'include' // ⭐ Crucial para cookies de sesión
             });
 
-            const result = await response.json();
+            console.log('📡 Respuesta del servidor - Status:', response.status);
 
-            // 2. Procesar el resultado
-            if (response.ok) { // Verifica que el código de respuesta HTTP sea 200-299
+            const result = await response.json();
+            console.log('📦 Datos recibidos:', result);
+
+            // Procesar el resultado
+            if (response.ok) { 
+                console.log('✅ Login exitoso');
                 messageDiv.style.color = 'green';
                 messageDiv.innerText = result.message + " Redirigiendo...";
                 
@@ -35,16 +50,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = 'index.html';
                 }, 1000);
                 
-            } else { // Maneja 401, 400, etc.
+            } else { 
+                console.log('❌ Login fallido:', result.message);
                 messageDiv.style.color = 'red';
-                messageDiv.innerText = "Error: " + (result.message || "Credenciales inválidas o servidor no responde con JSON.");
+                messageDiv.innerText = "Error: " + (result.message || "Credenciales inválidas.");
             }
 
         } catch (e) {
-            // Error de red (Servidor Java no corriendo)
+            // Error de red (Servidor Java no corriendo o CORS)
+            console.error('💥 Error de conexión:', e);
             messageDiv.style.color = 'red';
             messageDiv.innerText = 'Error de conexión: Asegúrese que el servidor Java esté corriendo.';
-            console.error(e);
+        }
+    };
+
+    // Click en el botón de login
+    loginButton.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await performLogin();
+    });
+
+    // Permitir login con Enter en el campo de contraseña
+    passwordInput.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            await performLogin();
         }
     });
+
+    // Permitir login con Enter en el campo de usuario
+    usernameInput.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            await performLogin();
+        }
+    });
+    
+    console.log('✅ Sistema de login inicializado');
 });

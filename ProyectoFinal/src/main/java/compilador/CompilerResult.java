@@ -1,27 +1,42 @@
 package compilador;
 
 //Almacena resultados
-public class CompilerResult{
+public class CompilerResult {
+    private final boolean success;      // ⭐ AGREGADO
     private final String asmCode;
     private final String dotCode;
     private final String error;
 
-    //Constructor para exito
-    public CompilerResult(String asmCode, String dotCode){
+    // Constructor para éxito
+    public CompilerResult(String asmCode, String dotCode) {
+        this.success = true;            // ⭐ AGREGADO
         this.asmCode = asmCode;
         this.dotCode = dotCode;
         this.error = null;
     }
 
-    //Constructor para error
-    public CompilerResult(String error){
+    // Constructor para error
+    public CompilerResult(String error) {
+        this.success = false;           // ⭐ AGREGADO
         this.asmCode = null;
         this.dotCode = null;
         this.error = error;
     }
 
-    //Getters
-    public String getAsmCode(){return asmCode;}
-    public String getDotCode(){return dotCode;}
-    public String getError(){return error;}
+    // Getters
+    public boolean isSuccess() {        // ⭐ AGREGADO
+        return success;
+    }
+
+    public String getAsmCode() {
+        return asmCode;
+    }
+
+    public String getDotCode() {
+        return dotCode;
+    }
+
+    public String getError() {
+        return error;
+    }
 }
