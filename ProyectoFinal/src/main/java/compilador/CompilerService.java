@@ -1,6 +1,5 @@
 package compilador;
 
-// Importa SparkJava y utilidades
 import compilador.lexer.Lexer;
 import compilador.parser.Parser;
 import compilador.parser.declarations.Program;
@@ -10,26 +9,22 @@ import compilador.intermedio.Cuadrupla;
 import compilador.generacion.CodeGenerator;
 import compilador.generacion.DiagramGenerator;
 import java.util.List;
-import compilador.semantico.LogService; // Importa el servicio de log
+import java.io.FileWriter;
+import java.io.IOException;
+// Se elimina el import de LogService
 
 public class CompilerService {
 
-    // Instancia del servicio de log (Necesita que la clase exista)
-    private final LogService logService; 
+    // Se eliminó la instancia de LogService
 
     public CompilerService() {
-        // Inicializar el servicio de log en el constructor
-        this.logService = new LogService(); 
+        // No se necesita inicializar el LogService
     }
 
-    /**
-     * Compila el código fuente y registra la actividad si es exitosa.
-     * @param sourceCode El código MiniJava a compilar.
-     * @param userId El ID del usuario autenticado (se obtiene de la sesión de Spark).
-     */
-    public CompilerResult compile(String sourceCode, String userId) {
+    // Se eliminó el parámetro userId de la firma del método
+    public CompilerResult compile(String sourceCode) { 
         try {
-            // FASE 1 - 3 (Análisis)
+            // FASES 1, 2, 3 (Análisis)
             Lexer lexer = new Lexer(sourceCode);
             Parser parser = new Parser(lexer);
             Program ast = parser.parseProgram();
@@ -48,19 +43,33 @@ public class CompilerService {
 
             DiagramGenerator diagramGenerator = new DiagramGenerator();
             String dotResult = diagramGenerator.generateDotString(ast); 
+            
+            // ======================================================
+            // === LÓGICA DE ESCRITURA DE ARCHIVOS DE SALIDA (NUEVA) ===
+            // ======================================================
+            try {
+                // Escribe el archivo Assembly (program.asm)
+                try (FileWriter asmWriter = new FileWriter("output/program.asm")) {
+                    asmWriter.write(asmResult);
+                }
 
-            // --- TAREA D: REGISTRO DE LOG ---
-            // Solo registramos si la compilación fue exitosa (no hubo RuntimeException)
-            logService.recordLog(userId, sourceCode, asmResult, dotResult); 
-            // ---------------------------------
+                // Escribe el archivo DOT (program_flow.dot)
+                try (FileWriter dotWriter = new FileWriter("output/program_flow.dot")) {
+                    dotWriter.write(dotResult);
+                }
+            } catch (IOException e) {
+                // Importante: Si la escritura falla, lo registramos pero dejamos que la compilación continúe.
+                System.err.println("Advertencia de I/O: No se pudieron guardar los archivos de salida en 'output/'. Verifique los permisos o la existencia de la carpeta. Detalle: " + e.getMessage());
+            }
+            // ======================================================
+
+            // Se eliminó la llamada a logService.recordLog(...)
 
             return new CompilerResult(asmResult, dotResult);
 
         } catch (RuntimeException e) {
-            // Captura errores de compilación (léxico, sintáctico, semántico)
             return new CompilerResult(e.getMessage());
         } catch (Exception e) {
-            // Captura errores inesperados (p. ej., problemas de IO en LogService)
             return new CompilerResult("Error inesperado del servidor: " + e.getMessage());
         }
     }

@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
                     body: code,
-                    credentials: 'include'
+                    //credentials: 'include'
                 });
 
                 console.log('📡 Respuesta recibida - Status:', response.status);

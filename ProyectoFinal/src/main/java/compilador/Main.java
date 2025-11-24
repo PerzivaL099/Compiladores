@@ -3,8 +3,8 @@ package compilador;
 import static spark.Spark.*;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import spark.Session;
+import com.google.gson.JsonObject; 
+//import spark.Session; 
 
 public class Main {
 
@@ -13,43 +13,47 @@ public class Main {
         CompilerService compilerService = new CompilerService();
         Gson gson = new Gson();
 
-        // 1. CONFIGURACIÓN DEL SERVIDOR
+        // 1. CONFIGURACIÓN DEL SERVIDOR Y SESIONES
         ipAddress("127.0.0.1");
         port(4567);
-
-        // 2. ⭐ CONFIGURACIÓN CORS - DEBE IR ANTES DE TODAS LAS RUTAS
-        before((request, response) -> {
-            // IMPORTANTE: Usar el origin específico en lugar de "*" cuando usas credentials
-            response.header("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
-            response.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            response.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-            response.header("Access-Control-Allow-Credentials", "true");
-        });
-
-        // Manejar solicitudes OPTIONS (preflight de CORS)
+        // La gestión de sesiones de Spark es complicada y no necesaria para la compilación, se mantiene comentada.
+        /*
+        // sessionManagement(config -> {
+        //   config.sessionTrackingMode("cookie");
+        // });
+        */
+        
+        // --- FILTROS DE SEGURIDAD (DESACTIVADOS PARA LA PRUEBA) ---
+        // Se elimina el filtro 'before /compile' que requiere el user_id
+        
+        // --- HABILITAR CORS (Cambios para solucionar 'Failed to fetch') ---
+        // Se añade la cabecera Access-Control-Allow-Headers para permitir el Content-Type (necesario para POST)
         options("/*", (request, response) -> {
             String accessControlRequestHeaders = request.headers("Access-Control-Request-Headers");
             if (accessControlRequestHeaders != null) {
-                response.header("Access-Control-Allow-Headers", accessControlRequestHeaders);
+                // *** CAMBIO CLAVE: Permitir cabeceras como Content-Type y otras requeridas ***
+                response.header("Access-Control-Allow-Headers", "Content-Type, " + accessControlRequestHeaders);
+            } else {
+                response.header("Access-Control-Allow-Headers", "Content-Type");
             }
+            
             String accessControlRequestMethod = request.headers("Access-Control-Request-Method");
             if (accessControlRequestMethod != null) {
                 response.header("Access-Control-Allow-Methods", accessControlRequestMethod);
+            } else {
+                 response.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
             }
             return "OK";
         });
+        
+        // El * permite que cualquier origen (incluyendo tu front-end en 127.0.0.1:5500) acceda a los recursos
+        before((request, response) -> response.header("Access-Control-Allow-Origin", "*"));
 
-        // 3. FILTRO DE SEGURIDAD PARA /compile
-        before("/compile", (request, response) -> {
-            Session session = request.session(false);
-            if (session == null || session.attribute("user_id") == null) {
-                halt(401, gson.toJson(new CompilerResult("Acceso denegado. Por favor, inicie sesión.")));
-            }
-        });
 
         // --- ENDPOINTS DE LA APLICACIÓN ---
 
-        // 4. ENDPOINT DE LOGIN
+        // 3. ENDPOINT DE LOGIN (SE MANTIENE ACTIVO PARA PRUEBAS)
+        // Nota: Es posible que necesites añadir headers CORS también en el post-response si el front-end usa credenciales.
         post("/login", (request, response) -> {
             response.type("application/json");
             
@@ -58,56 +62,48 @@ public class Main {
                 String username = json.get("username").getAsString();
                 String password = json.get("password").getAsString();
 
-                System.out.println("🔐 Intento de login - Usuario: " + username);
-
-                // Validación de credenciales
+                // LÓGICA DE AUTENTICACIÓN HARDCODEADA
                 if ("admin".equals(username) && "1234".equals(password)) { 
-                    request.session(true).attribute("user_id", username);
-                    System.out.println("✅ Login exitoso para: " + username);
+                    request.session(true).attribute("user_id", username); 
                     return gson.toJson(new LoginResult(true, "Sesión iniciada."));
                 }
                 
-                System.out.println("❌ Credenciales inválidas para: " + username);
-                response.status(401);
+                response.status(401); 
                 return gson.toJson(new LoginResult(false, "Credenciales inválidas."));
                 
             } catch (Exception e) {
-                System.out.println("⚠️ Error en login: " + e.getMessage());
-                e.printStackTrace();
-                response.status(400);
-                return gson.toJson(new LoginResult(false, "Formato de petición incorrecto."));
+                 response.status(400); 
+                 return gson.toJson(new LoginResult(false, "Formato de petición incorrecto."));
             }
         });
 
-        // 5. ENDPOINT DE COMPILACIÓN
+
+        // 4. ENDPOINT DE COMPILACIÓN (ACCESO ABIERTO)
         post("/compile", (request, response) -> {
             response.type("application/json");
             
-            String userId = request.session().attribute("user_id");
             String sourceCode = request.body();
             
-            System.out.println("📝 Compilando código para usuario: " + userId);
+            // Llama al CompilerService sin pasar el userId
+            CompilerResult result = compilerService.compile(sourceCode); 
             
-            CompilerResult result = compilerService.compile(sourceCode, userId); 
+            // ⭐⭐⭐ IMPLEMENTACIÓN DEL CÓDIGO DE ESTADO HTTP ⭐⭐⭐
+            if (result.isSuccess()) {
+                response.status(200); // OK: Todo el proceso de compilación fue exitoso
+            } else {
+                // ERROR: Error léxico, sintáctico o semántico.
+                // Usamos 400 Bad Request para indicar un fallo en los datos de entrada (el código fuente).
+                response.status(400); 
+            }
             
             return gson.toJson(result);
         });
 
-        // 6. ENDPOINT DE PRUEBA (para verificar que el servidor funciona)
-        get("/", (request, response) -> {
-            response.type("application/json");
-            return "{\"status\":\"Server is running\",\"version\":\"1.0\"}";
-        });
-
-        System.out.println("✅ SERVIDOR COMPILADOR INICIADO EN http://127.0.0.1:4567");
-        System.out.println("📋 Endpoints disponibles:");
-        System.out.println("   - POST /login");
-        System.out.println("   - POST /compile");
-        System.out.println("   - GET  /");
+        System.out.println("--- SERVIDOR COMPILADOR INICIADO EN http://127.0.0.1:4567 ---");
     }
 }
 
-// Clase auxiliar para el resultado del login
+// Clase auxiliar para el resultado del login (necesaria para Gson)
 class LoginResult {
     boolean success;
     String message;

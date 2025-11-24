@@ -2,7 +2,7 @@ digraph FlowChart {
 	rankdir=TB; // De Arriba a Abajo
 	node [shape=box, style="rounded"];
 	N0 [label="START", shape=oval, color="black"];
-	N1 [label="FUNCIÓN: factorial", shape=invhouse, color="blue"];
+	N1 [label="FUNCIÃ“N: factorial", shape=invhouse, color="blue"];
 	N2 [label="BlockStart", shape=point, color="white"];
 	N3 [label="BlockEnd", shape=point, color="white"];
 	N4 [label="IF: ...", shape=diamond, color="red"];
@@ -29,7 +29,7 @@ digraph FlowChart {
 	N5 -> N3 [label=""];
 	N1 -> N2 [label="Entry"];
 	N0 -> N1 [label=""];
-	N14 [label="FUNCIÓN: main", shape=invhouse, color="blue"];
+	N14 [label="FUNCIÃ“N: main", shape=invhouse, color="blue"];
 	N15 [label="BlockStart", shape=point, color="white"];
 	N16 [label="BlockEnd", shape=point, color="white"];
 	N17 [label="int x", shape=box, color="green"];

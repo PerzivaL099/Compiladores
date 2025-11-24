@@ -18,8 +18,8 @@ public class CompilerResult {
     // Constructor para error
     public CompilerResult(String error) {
         this.success = false;           // ⭐ AGREGADO
-        this.asmCode = null;
-        this.dotCode = null;
+        this.asmCode = "";
+        this.dotCode = "";
         this.error = error;
     }
 
