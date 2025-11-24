@@ -2,11 +2,14 @@
 body { 
     margin: 0; 
     padding: 0; 
+    /* MODO CLARO POR DEFECTO */
     background-color: #e8e8e8;
+    color: #333;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
     display: flex; 
     flex-direction: column; 
     height: 100vh; 
+    transition: background-color 0.3s, color 0.3s; /* Transición suave */
 }
 
 /* 2. Encabezado principal */
@@ -16,11 +19,14 @@ header {
     padding: 15px 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     flex-shrink: 0; 
+    display: flex; /* Para alinear el botón de tema */
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s, box-shadow 0.3s;
 }
 h1 { margin: 0; font-size: 1.5em; }
 
-/* --- CORRECCIÓN CLAVE --- */
-/* 3. Contenedor Principal (Grid Layout 1fr 1fr 1fr) */
+/* --- ESTRUCTURA DE COLUMNAS --- */
 #app-container { 
     display: grid; 
     grid-template-columns: 1fr 1fr 1fr; /* Tres columnas iguales */
@@ -32,48 +38,57 @@ h1 { margin: 0; font-size: 1.5em; }
 #input-column { 
     padding: 20px; 
     border-right: 1px solid #ddd; 
-    background-color: #FFFFFF;
+    background-color: #FFFFFF; /* Fondo claro por defecto */
     display: flex;
     flex-direction: column;
     overflow-y: auto; 
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
-/* 5. Columna de Ensamblador (Medio - NUEVA ID) */
-#asm-output-column { /* Nuevo Contenedor */
+/* 5. Columna de Ensamblador (Medio) */
+#asm-output-column {
     padding: 20px; 
-    border-right: 1px solid #ddd; /* Añadimos borde al medio */
+    border-right: 1px solid #ddd;
     background-color: #fbfbfb;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
-/* 6. Columna de Diagrama (Derecha - NUEVA ID) */
-#diagram-output-column { /* Nuevo Contenedor */
+/* 6. Columna de Diagrama (Derecha) */
+#diagram-output-column {
     padding: 20px; 
     background-color: #fcfcfc;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    transition: background-color 0.3s;
 }
-/* --- FIN CORRECCIÓN CLAVE --- */
-
+/* --- FIN ESTRUCTURA DE COLUMNAS --- */
 
 /* 7. Estilo CodeMirror */
 .CodeMirror { 
     border: 1px solid #333; 
-    height: 100%; /* Ocupa toda la altura disponible en la columna */
+    height: 100%; 
     font-size: 14px; 
     flex-grow: 1;
     margin-bottom: 15px;
+    /* El fondo del editor es manejado por el tema (default / monokai) */
 }
 
 /* 8. Ensamblador */
 #asmOutput { 
     flex-grow: 1; 
     min-height: 150px; 
-    resize: none; /* Quitamos la opción de redimensionar */
-    height: 100%; /* Ocupa la altura del contenedor */
+    resize: none; 
+    height: 100%;
+    /* Estilos claros por defecto */
+    background-color: #fff; 
+    color: #333;
+    padding: 10px;
+    border: 1px solid #ddd;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 /* 9. Estilo de Diagrama */
@@ -83,6 +98,7 @@ h1 { margin: 0; font-size: 1.5em; }
     overflow: auto; 
     background-color: white; 
     border: 1px solid #eee;
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
 /* 10. Botones y Errores */
@@ -94,13 +110,67 @@ h1 { margin: 0; font-size: 1.5em; }
     font-size: 16px; 
     cursor: pointer; 
     margin-bottom: 15px;
+    transition: background-color 0.3s;
 }
 #errorOutput { 
     background-color: #f8f8f8; 
-    border: 1px solid #ccc;     
-    color: #333;                
+    border: 1px solid #ccc;     
+    color: #333;                
     padding: 10px; 
     margin-top: 10px;
     min-height: 30px;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 }
-h3 { margin: 0 0 10px 0; font-size: 1.2em; color: #333; }
+h3 { margin: 0 0 10px 0; font-size: 1.2em; color: #333; transition: color 0.3s; }
+
+
+/* ======================================================= */
+/* ⭐⭐⭐ CLASE ACTIVA PARA EL MODO OSCURO (MONOKAI) ⭐⭐⭐ */
+/* ======================================================= */
+
+body.dark-mode {
+    background-color: #272822; /* Fondo principal Monokai */
+    color: #f8f8f2;
+}
+
+/* Header */
+.dark-mode header {
+    background-color: #1a1a1a;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Títulos */
+.dark-mode h3 {
+    color: #FFD700; /* Amarillo/Dorado de Monokai */
+}
+
+/* Columnas y Divisiones */
+.dark-mode #input-column,
+.dark-mode #asm-output-column,
+.dark-mode #diagram-output-column {
+    background-color: #3e3f3a; /* Fondo más sutil para las columnas */
+    border-right-color: #494a45 !important;
+}
+.dark-mode #input-column {
+    background-color: #272822; /* El editor Monokai usa este color */
+}
+
+/* Salida Ensamblador */
+.dark-mode #asmOutput {
+    background-color: #272822;
+    color: #f8f8f2;
+    border-color: #494a45;
+}
+
+/* Contenedor del Diagrama */
+.dark-mode #diagramContainer {
+    background-color: #272822; /* Fondo del diagrama oscuro */
+    border-color: #494a45;
+}
+
+/* Errores */
+.dark-mode #errorOutput {
+    background-color: #1a1a1a;
+    color: #f8f8f2;
+    border-color: #494a45;
+}

@@ -13,15 +13,56 @@ document.addEventListener("DOMContentLoaded", () => {
     const errorOutputEl = document.getElementById('errorOutput');
     const diagramContainer = document.getElementById('diagramContainer');
     
+    // ⭐ NUEVAS REFERENCIAS PARA EL TEMA ⭐
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    
+    // --- FUNCIÓN DE CAMBIO DE TEMA ---
+    function toggleTheme() {
+        // 1. Alternar la clase en el body
+        body.classList.toggle('dark-mode');
+        const isDarkMode = body.classList.contains('dark-mode');
+        
+        // 2. Actualizar el texto del botón
+        themeToggle.textContent = isDarkMode ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+
+        // 3. Aplicar el tema de CodeMirror
+        // Nota: Asegurarse de que el CSS de 'default' y 'monokai' esté cargado en index.html
+        sourceCodeEditor.setOption("theme", isDarkMode ? "monokai" : "default");
+
+        // 4. Guardar la preferencia
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    }
+    
     // Inicializar CodeMirror
     if (codeEditorContainer) {
         sourceCodeEditor = CodeMirror(codeEditorContainer, {
             value: "// Pega tu código de MiniJava aquí...\nint x;\nx = 5;",
             mode: "clike",
             lineNumbers: true,
-            theme: "default"
+            // Establecer el tema inicial aquí, se ajustará después
+            theme: "monokai" 
         });
         console.log('✅ Editor CodeMirror inicializado');
+    }
+    
+    // ⭐ LÓGICA DE INICIALIZACIÓN DE TEMA AL CARGAR ⭐
+    const savedTheme = localStorage.getItem('theme');
+    // Inicializar el estado de la aplicación
+    if (savedTheme === 'dark') {
+        // Inicializa en modo oscuro (simulando el toggle para aplicar todas las clases)
+        body.classList.add('dark-mode');
+        themeToggle.textContent = '☀️ Modo Claro';
+        sourceCodeEditor.setOption("theme", "monokai");
+    } else {
+        // Inicializa en modo claro
+        themeToggle.textContent = '🌙 Modo Oscuro';
+        sourceCodeEditor.setOption("theme", "default");
+    }
+    
+    // ⭐ ASIGNAR EL EVENTO DEL BOTÓN ⭐
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
     }
     
     // --- FUNCIÓN DE RENDERIZADO DE DIAGRAMA ---
@@ -93,10 +134,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 const result = await response.json();
                 console.log('📦 Resultado completo:', result);
-                console.log('   - success:', result.success);
-                console.log('   - asmCode length:', result.asmCode ? result.asmCode.length : 0);
-                console.log('   - dotCode length:', result.dotCode ? result.dotCode.length : 0);
-                console.log('   - error:', result.error);
+                console.log('   - success:', result.success);
+                console.log('   - asmCode length:', result.asmCode ? result.asmCode.length : 0);
+                console.log('   - dotCode length:', result.dotCode ? result.dotCode.length : 0);
+                console.log('   - error:', result.error);
 
                 // Procesar resultados
                 if (response.ok && result.success) {
