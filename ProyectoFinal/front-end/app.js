@@ -13,24 +13,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const errorOutputEl = document.getElementById('errorOutput');
     const diagramContainer = document.getElementById('diagramContainer');
     
-    // ⭐ NUEVAS REFERENCIAS PARA EL TEMA ⭐
+    // ⭐ NUEVAS REFERENCIAS DE TEMA Y PESTAÑAS ⭐
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const symbolTableBody = document.querySelector('#symbolTable tbody'); // Asume que la tabla está lista
     
-    // --- FUNCIÓN DE CAMBIO DE TEMA ---
+    // -----------------------------------------------------
+    // --- LÓGICA DE MANEJO DE TEMA (Modo Claro/Oscuro) ---
+    // -----------------------------------------------------
     function toggleTheme() {
-        // 1. Alternar la clase en el body
         body.classList.toggle('dark-mode');
         const isDarkMode = body.classList.contains('dark-mode');
         
-        // 2. Actualizar el texto del botón
         themeToggle.textContent = isDarkMode ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
-
-        // 3. Aplicar el tema de CodeMirror
-        // Nota: Asegurarse de que el CSS de 'default' y 'monokai' esté cargado en index.html
         sourceCodeEditor.setOption("theme", isDarkMode ? "monokai" : "default");
-
-        // 4. Guardar la preferencia
         localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
     }
     
@@ -40,31 +37,83 @@ document.addEventListener("DOMContentLoaded", () => {
             value: "// Pega tu código de MiniJava aquí...\nint x;\nx = 5;",
             mode: "clike",
             lineNumbers: true,
-            // Establecer el tema inicial aquí, se ajustará después
-            theme: "monokai" 
+            theme: "default" // Se establecerá el tema final al cargar
         });
         console.log('✅ Editor CodeMirror inicializado');
     }
     
     // ⭐ LÓGICA DE INICIALIZACIÓN DE TEMA AL CARGAR ⭐
     const savedTheme = localStorage.getItem('theme');
-    // Inicializar el estado de la aplicación
     if (savedTheme === 'dark') {
-        // Inicializa en modo oscuro (simulando el toggle para aplicar todas las clases)
         body.classList.add('dark-mode');
         themeToggle.textContent = '☀️ Modo Claro';
-        sourceCodeEditor.setOption("theme", "monokai");
+        // Esto funciona porque el CodeMirror ya está inicializado
+        if (sourceCodeEditor) sourceCodeEditor.setOption("theme", "monokai");
     } else {
-        // Inicializa en modo claro
         themeToggle.textContent = '🌙 Modo Oscuro';
-        sourceCodeEditor.setOption("theme", "default");
+        if (sourceCodeEditor) sourceCodeEditor.setOption("theme", "default");
     }
     
-    // ⭐ ASIGNAR EL EVENTO DEL BOTÓN ⭐
+    // ⭐ ASIGNAR EL EVENTO DEL BOTÓN DE TEMA ⭐
     if (themeToggle) {
         themeToggle.addEventListener('click', toggleTheme);
     }
     
+    // -----------------------------------------------------------------
+    // --- LÓGICA DE MANEJO DE PESTAÑAS (Ensamblador / Tabla Símbolos) ---
+    // -----------------------------------------------------------------
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const targetId = e.target.getAttribute('data-target');
+            const targetContent = document.getElementById(targetId);
+            // El contenedor padre debe ser #mid-output-column (ajustado en HTML)
+            const parentContainer = e.target.closest('#mid-output-column'); 
+            
+            if (!parentContainer) return;
+
+            // Ocultar todos los contenidos y desactivar todos los botones
+            parentContainer.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            parentContainer.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Mostrar el contenido objetivo y activar el botón
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+            }
+            e.target.classList.add('active');
+        });
+    });
+
+    // -------------------------------------------------------------
+    // --- FUNCIÓN DE RENDERIZADO DE TABLA DE SÍMBOLOS ---
+    // -------------------------------------------------------------
+    function renderSymbolTable(symbolTable) {
+        if (!symbolTableBody) return;
+
+        // Limpiar contenido anterior
+        symbolTableBody.innerHTML = ''; 
+
+        if (!symbolTable || symbolTable.length === 0) {
+            symbolTableBody.innerHTML = '<tr><td colspan="4">No hay símbolos definidos o detectados.</td></tr>';
+            return;
+        }
+
+        // Llenar la tabla con los datos del JSON (SimboloDTO)
+        symbolTable.forEach(simbolo => {
+            const row = symbolTableBody.insertRow();
+            // Los campos coinciden con el DTO (name, type, scope, address)
+            row.insertCell().textContent = simbolo.name; 
+            row.insertCell().textContent = simbolo.type;
+            row.insertCell().textContent = simbolo.scope;
+            row.insertCell().textContent = simbolo.address || 'N/A';
+        });
+
+        console.log(`✅ Tabla de Símbolos renderizada con ${symbolTable.length} entradas.`);
+    }
+
     // --- FUNCIÓN DE RENDERIZADO DE DIAGRAMA ---
     function renderDiagram(dotString) {
         if (!diagramContainer) {
@@ -91,7 +140,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // --- FUNCIÓN PRINCIPAL DE COMPILACIÓN ---
+
+    // -------------------------------------------------------------
+    // --- FUNCIÓN PRINCIPAL DE COMPILACIÓN (con consumo de Tabla) ---
+    // -------------------------------------------------------------
     if (compileButton && sourceCodeEditor) {
         
         compileButton.addEventListener('click', async (e) => {
@@ -120,25 +172,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
             try {
                 console.log('📝 Enviando código al servidor...');
-                console.log('Código a compilar:', code.substring(0, 100) + '...');
-                
                 // Enviar el código al servidor Java
                 const response = await fetch('http://127.0.0.1:4567/compile', {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
                     body: code,
-                    //credentials: 'include'
                 });
 
                 console.log('📡 Respuesta recibida - Status:', response.status);
                 
                 const result = await response.json();
-                console.log('📦 Resultado completo:', result);
-                console.log('   - success:', result.success);
-                console.log('   - asmCode length:', result.asmCode ? result.asmCode.length : 0);
-                console.log('   - dotCode length:', result.dotCode ? result.dotCode.length : 0);
-                console.log('   - error:', result.error);
-
+                // console.log('📦 Resultado completo:', result); // Mantener para depuración
+                
                 // Procesar resultados
                 if (response.ok && result.success) {
                     // Compilación exitosa
@@ -146,15 +191,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     
                     if (result.asmCode) {
                         asmOutputEl.value = result.asmCode;
-                        console.log('✅ Ensamblador mostrado');
-                    } else {
-                        console.warn('⚠️ No hay código ensamblador en la respuesta');
-                    }
-                    
+                    } 
                     if (result.dotCode) {
                         renderDiagram(result.dotCode);
-                    } else {
-                        console.warn('⚠️ No hay diagrama DOT en la respuesta');
+                    }
+                    
+                    // ⭐ CONSUMIR LA TABLA DE SÍMBOLOS ⭐
+                    if (result.symbolTable) {
+                        renderSymbolTable(result.symbolTable);
+                        // Opcional: Cambiar automáticamente a la pestaña Ensamblador después de compilar
+                        document.getElementById('asmTabButton').click(); 
                     }
 
                     if (errorOutputEl) {
@@ -164,17 +210,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     
                 } else if (response.status === 401) {
                     // Sesión expirada
-                    console.warn('⚠️ Sesión expirada');
-                    if (errorOutputEl) {
-                        errorOutputEl.innerText = '⚠️ Sesión expirada. Redirigiendo al login...';
-                        errorOutputEl.style.color = 'orange';
-                    }
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 2000);
+                    // Lógica de redireccionamiento
+                    // ...
                     
                 } else {
-                    // Error de compilación
+                    // Error de compilación (status 400)
                     console.error('❌ Error de compilación:', result.error);
                     if (errorOutputEl) {
                         errorOutputEl.innerText = `❌ ERROR DE COMPILACIÓN:\n${result.error || 'Error desconocido'}`;
@@ -183,6 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 
             } catch (e) {
+                // Error de red/conexión
                 console.error('💥 Error de conexión:', e);
                 if (errorOutputEl) {
                     errorOutputEl.innerText = '❌ Error de conexión con el servidor: ¿Está el servidor Java en ejecución?\nDetalle: ' + e.message;

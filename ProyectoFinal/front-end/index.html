@@ -34,11 +34,35 @@
             <pre id="errorOutput"></pre>
         </div>
 
-        <div id="asm-output-column">
-            <h3>Salida Ensamblador (.asm)</h3>
-            <textarea id="asmOutput" readonly></textarea>
-        </div>
+        <div id="mid-output-column" class="output-container">
+            
+            <div class="output-selector">
+                <button id="asmTabButton" class="tab-button active" data-target="asmOutputContainer">Salida Ensamblador (.asm)</button>
+                <button id="symbolsTabButton" class="tab-button" data-target="symbolTableContainer">Tabla de Símbolos</button>
+            </div>
 
+            <div id="asmOutputContainer" class="tab-content active">
+                <h3>Salida Ensamblador (.asm)</h3>
+                <textarea id="asmOutput" readonly></textarea>
+            </div>
+
+            <div id="symbolTableContainer" class="tab-content hidden">
+                <h3>Tabla de Símbolos (Análisis Semántico)</h3>
+                <table id="symbolTable">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Ámbito</th>
+                            <th>Dirección</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+
+        </div>
         <div id="diagram-output-column">
             <h3>Diagrama de Flujo</h3>
             <div id="diagramContainer"></div> 

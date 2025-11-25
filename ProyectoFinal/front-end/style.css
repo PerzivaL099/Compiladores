@@ -45,14 +45,14 @@ h1 { margin: 0; font-size: 1.5em; }
     transition: background-color 0.3s, border-color 0.3s;
 }
 
-/* 5. Columna de Ensamblador (Medio) */
-#asm-output-column {
-    padding: 20px; 
+/* 5. Columna de Salida Configurable (Medio) */
+#mid-output-column { /* Usaremos este ID en lugar de #asm-output-column */
+    padding: 0; /* Padding movido a los contenedores internos */
     border-right: 1px solid #ddd;
     background-color: #fbfbfb;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow-y: hidden; /* Controlar desbordamiento */
     transition: background-color 0.3s, border-color 0.3s;
 }
 
@@ -74,7 +74,6 @@ h1 { margin: 0; font-size: 1.5em; }
     font-size: 14px; 
     flex-grow: 1;
     margin-bottom: 15px;
-    /* El fondo del editor es manejado por el tema (default / monokai) */
 }
 
 /* 8. Ensamblador */
@@ -89,6 +88,13 @@ h1 { margin: 0; font-size: 1.5em; }
     padding: 10px;
     border: 1px solid #ddd;
     transition: background-color 0.3s, color 0.3s;
+}
+#asmOutputContainer { /* Contenedor Ensamblador y Tabla de Símbolos */
+    flex-grow: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
 }
 
 /* 9. Estilo de Diagrama */
@@ -123,6 +129,55 @@ h1 { margin: 0; font-size: 1.5em; }
 }
 h3 { margin: 0 0 10px 0; font-size: 1.2em; color: #333; transition: color 0.3s; }
 
+/* ======================================================= */
+/* ⭐⭐⭐ ESTILOS PARA PESTAÑAS Y TABLA DE SÍMBOLOS ⭐⭐⭐ */
+/* ======================================================= */
+
+.output-selector {
+    display: flex;
+    border-bottom: 2px solid #ddd;
+    background-color: #f0f0f0;
+    flex-shrink: 0;
+}
+
+.tab-button {
+    padding: 10px 15px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1em;
+    color: #666; 
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s;
+    outline: none;
+}
+
+.tab-button.active {
+    color: #4CAF50; 
+    border-bottom: 2px solid #4CAF50;
+    font-weight: bold;
+    background-color: #fff;
+}
+
+.tab-content.hidden {
+    display: none !important;
+}
+
+#symbolTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+#symbolTable th, #symbolTable td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+#symbolTable th {
+    background-color: #f2f2f2;
+}
+
 
 /* ======================================================= */
 /* ⭐⭐⭐ CLASE ACTIVA PARA EL MODO OSCURO (MONOKAI) ⭐⭐⭐ */
@@ -145,14 +200,28 @@ body.dark-mode {
 }
 
 /* Columnas y Divisiones */
-.dark-mode #input-column,
-.dark-mode #asm-output-column,
+.dark-mode #input-column {
+    background-color: #272822; /* El editor Monokai usa este color */
+    border-right-color: #494a45 !important;
+}
+.dark-mode #mid-output-column, 
 .dark-mode #diagram-output-column {
     background-color: #3e3f3a; /* Fondo más sutil para las columnas */
     border-right-color: #494a45 !important;
 }
-.dark-mode #input-column {
-    background-color: #272822; /* El editor Monokai usa este color */
+
+/* Estilos de Pestañas en Modo Oscuro */
+.dark-mode .output-selector {
+    border-bottom-color: #494a45;
+    background-color: #3e3f3a;
+}
+.dark-mode .tab-button {
+    color: #f8f8f2;
+}
+.dark-mode .tab-button.active {
+    color: #FFD700; 
+    border-bottom-color: #FFD700;
+    background-color: #272822;
 }
 
 /* Salida Ensamblador */
@@ -164,9 +233,19 @@ body.dark-mode {
 
 /* Contenedor del Diagrama */
 .dark-mode #diagramContainer {
-    background-color: #272822; /* Fondo del diagrama oscuro */
+    background-color: #272822; 
     border-color: #494a45;
 }
+
+/* Tabla de Símbolos */
+.dark-mode #symbolTable th {
+    background-color: #3e3f3a;
+    color: #f8f8f2;
+}
+.dark-mode #symbolTable th, .dark-mode #symbolTable td {
+    border-bottom-color: #494a45;
+}
+
 
 /* Errores */
 .dark-mode #errorOutput {

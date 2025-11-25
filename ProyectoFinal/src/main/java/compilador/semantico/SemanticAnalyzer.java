@@ -18,8 +18,6 @@ import compilador.parser.statements.*;
 public class SemanticAnalyzer implements ASTVisitor {
 
     private final TablaSimbolos tablaSimbolos;
-    
-    // Almacena el tipo de retorno esperado de la función actual
     private String currentFunctionReturnType = "void"; 
 
     public SemanticAnalyzer() {
@@ -27,10 +25,14 @@ public class SemanticAnalyzer implements ASTVisitor {
     }
     
     // Método principal llamado desde Main.java
-    // Este método ahora es válido porque "Program" está importado.
     public void analyze(Program ast) {
         System.out.println("-> Analizando Semánticamente...");
         ast.accept(this);
+    }
+    
+    // ⭐ MÉTODO AÑADIDO: Expone la Tabla de Símbolos (Soluciona el error Ln 44) ⭐
+    public TablaSimbolos getTablaSimbolos() {
+        return this.tablaSimbolos;
     }
     
     // --- Utilidades de Reporte de Errores ---
@@ -104,24 +106,29 @@ public class SemanticAnalyzer implements ASTVisitor {
     }
 
     @Override
-    public Object visit(DeclarationStatement node) {
-        int line = node.getLine();
-        
-        if (tablaSimbolos.isDeclaredInCurrentScope(node.id)) {
-            reportError(line, "La variable '" + node.id + "' ya está definida en este ámbito.");
-        }
-        
-        // Chequeo de tipo si hay inicialización
-        if (node.initialValue != null) {
-            String exprType = (String) node.initialValue.accept(this); // Visita la expresión
-            if (!exprType.equals(node.type)) {
-                reportError(line, "Tipos incompatibles. No se puede inicializar '" + node.type + "' con un valor de tipo '" + exprType + "'.");
-            }
-        }
-        
-        tablaSimbolos.declareVariable(node.id, node.type); // Declarar la variable
-        return null;
+public Object visit(DeclarationStatement node) {
+    int line = node.getLine();
+    
+    // ⭐ PUNTO DE CONTROL AÑADIDO ⭐
+    System.out.println("DEBUG SA: Intentando declarar variable: " + node.id + " en línea " + line);
+    
+    if (tablaSimbolos.isDeclaredInCurrentScope(node.id)) {
+        reportError(line, "La variable '" + node.id + "' ya está definida en este ámbito.");
     }
+    
+    // Chequeo de tipo si hay inicialización
+    if (node.initialValue != null) {
+        String exprType = (String) node.initialValue.accept(this);
+        if (!exprType.equals(node.type)) {
+            reportError(line, "Tipos incompatibles. No se puede inicializar '" + node.type + "' con un valor de tipo '" + exprType + "'.");
+        }
+    }
+    
+    tablaSimbolos.declareVariable(node.id, node.type); // Declarar la variable
+    System.out.println("DEBUG SA: Éxito al declarar " + node.id); // <-- Nuevo mensaje de éxito
+    
+    return null;
+}
     
     @Override
     public Object visit(AssignmentStatement node) {
