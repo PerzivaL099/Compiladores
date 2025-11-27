@@ -1,7 +1,7 @@
 package compilador.intermedio;
 
 import compilador.parser.ASTVisitor;
-// Usamos el wildcard para importaciones más limpias (según nuestra discusión)
+
 import compilador.parser.declarations.*; 
 import compilador.parser.statements.*;
 import compilador.parser.expressions.*;
@@ -189,7 +189,7 @@ public class InterCodeGenerator implements ASTVisitor {
         return resultTemp; 
     }
     
-    // --- INICIO DE LA CORRECCIÓN ---
+    
     @Override
     public Object visit(FunctionCall node) {
         // 1. Generar cuádruplas para los argumentos
@@ -208,7 +208,7 @@ public class InterCodeGenerator implements ASTVisitor {
         
         return resultTemp;
     }
-    // --- FIN DE LA CORRECCIÓN ---
+    
     
     @Override
     public Object visit(VariableAccess node) {

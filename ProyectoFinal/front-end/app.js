@@ -13,15 +13,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const errorOutputEl = document.getElementById('errorOutput');
     const diagramContainer = document.getElementById('diagramContainer');
     
-    // Inicializar CodeMirror
+    // Referencia al botón de Modo Oscuro
+    const themeBtn = document.getElementById('themeToggle');
+    
+    // 1. Inicializar CodeMirror
     if (codeEditorContainer) {
         sourceCodeEditor = CodeMirror(codeEditorContainer, {
             value: "// Pega tu código de MiniJava aquí...\nint x;\nx = 5;",
             mode: "clike",
             lineNumbers: true,
-            theme: "default"
+            theme: "default" // Tema claro por defecto
         });
         console.log('✅ Editor CodeMirror inicializado');
+    }
+
+    // ==========================================
+    //  2. LÓGICA DE MODO OSCURO 
+    // ==========================================
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            // Alternar clase en el body
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            
+            // A. Cambiar texto del botón
+            themeBtn.innerText = isDarkMode ? "☀️ Modo Claro" : "🌙 Modo Oscuro";
+            
+            // B. Cambiar tema del editor CodeMirror (Monokai vs Default)
+            if (sourceCodeEditor) {
+                sourceCodeEditor.setOption("theme", isDarkMode ? "monokai" : "default");
+            }
+        });
     }
     
     // --- FUNCIÓN DE RENDERIZADO DE DIAGRAMA ---
@@ -82,36 +104,37 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.log('Código a compilar:', code.substring(0, 100) + '...');
                 
                 // Enviar el código al servidor Java
+                // Asegúrate de que el puerto coincida con tu Main.java (4567 para Spark)
                 const response = await fetch('http://127.0.0.1:4567/compile', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: code,
-                    //credentials: 'include'
+                    headers: { 'Content-Type': 'text/plain' }, // O 'application/json' si cambiaste el backend
+                    body: code, // O JSON.stringify({code: code}) si cambiaste el backend
                 });
 
                 console.log('📡 Respuesta recibida - Status:', response.status);
                 
                 const result = await response.json();
                 console.log('📦 Resultado completo:', result);
-                console.log('   - success:', result.success);
-                console.log('   - asmCode length:', result.asmCode ? result.asmCode.length : 0);
-                console.log('   - dotCode length:', result.dotCode ? result.dotCode.length : 0);
-                console.log('   - error:', result.error);
 
                 // Procesar resultados
-                if (response.ok && result.success) {
+                // Nota: Ajusta 'result.success' o 'result.isSuccess' según tu DTO Java
+                if (response.ok) { 
                     // Compilación exitosa
                     console.log('✅ Compilación exitosa');
                     
-                    if (result.asmCode) {
-                        asmOutputEl.value = result.asmCode;
+                    // Manejo de ASM (ajusta el nombre del campo si es 'asmResult' o 'asmCode')
+                    const asmText = result.asmCode || result.asmResult;
+                    if (asmText) {
+                        asmOutputEl.value = asmText;
                         console.log('✅ Ensamblador mostrado');
                     } else {
                         console.warn('⚠️ No hay código ensamblador en la respuesta');
                     }
                     
-                    if (result.dotCode) {
-                        renderDiagram(result.dotCode);
+                    // Manejo de DOT (ajusta el nombre del campo si es 'dotResult' o 'dotCode')
+                    const dotText = result.dotCode || result.dotResult;
+                    if (dotText) {
+                        renderDiagram(dotText);
                     } else {
                         console.warn('⚠️ No hay diagrama DOT en la respuesta');
                     }
@@ -121,22 +144,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         errorOutputEl.style.color = 'green';
                     }
                     
-                } else if (response.status === 401) {
-                    // Sesión expirada
-                    console.warn('⚠️ Sesión expirada');
-                    if (errorOutputEl) {
-                        errorOutputEl.innerText = '⚠️ Sesión expirada. Redirigiendo al login...';
-                        errorOutputEl.style.color = 'orange';
-                    }
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 2000);
-                    
                 } else {
-                    // Error de compilación
+                    // Error de compilación (Status 400, etc)
                     console.error('❌ Error de compilación:', result.error);
                     if (errorOutputEl) {
-                        errorOutputEl.innerText = `❌ ERROR DE COMPILACIÓN:\n${result.error || 'Error desconocido'}`;
+                        // Muestra el mensaje de error que viene del backend
+                        const errorMsg = result.error || result.message || 'Error desconocido';
+                        errorOutputEl.innerText = `❌ ERROR DE COMPILACIÓN:\n${errorMsg}`;
                         errorOutputEl.style.color = 'red';
                     }
                 }

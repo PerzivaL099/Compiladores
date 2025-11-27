@@ -54,9 +54,9 @@ public class CodeGenerator {
                 translateArithmetic(cuad);
                 break;
             
-            // --- INICIO DE CORRECCIONES ---
             
-            // 1. AÑADIDO: Manejo de Operadores Relacionales
+            
+            // Manejo de Operadores Relacionales
             case "<":
             case ">":
             case "<=":
@@ -66,17 +66,17 @@ public class CodeGenerator {
                 translateRelational(cuad);
                 break;
 
-            // 2. AÑADIDO: Manejo de Llamadas a Función (PARAM)
+            //  Manejo de Llamadas a Función (PARAM)
             case "PARAM":
                 translateParam(cuad);
                 break;
                 
-            // 3. AÑADIDO: Manejo de Llamadas a Función (CALL)
+            // 3. Manejo de Llamadas a Función (CALL)
             case "CALL":
                 translateCall(cuad);
                 break;
 
-            // 4. AÑADIDO: Manejo de Directivas (no generan código)
+            // 4.  Manejo de Directivas (no generan código)
             case "PARAM_IN":
             case "END_FUNCTION":
                 assemblyCode.add("\t; (Directiva: " + cuad.operator + ")");
@@ -102,7 +102,7 @@ public class CodeGenerator {
     }
     
     // ----------------------------------------------------------------
-    // MÉTODOS DE TRADUCCIÓN (Existentes)
+    // MÉTODOS DE TRADUCCIÓN 
     // ----------------------------------------------------------------
 
     private void translateAssign(Cuadrupla cuad) {
@@ -211,7 +211,7 @@ public class CodeGenerator {
     }
 
     // ----------------------------------------------------------------
-    // MÉTODOS DE MANEJO DE MEMORIA (SIMULADO)
+    // MÉTODOS DE MANEJO DE MEMORIA 
     // ----------------------------------------------------------------
     
     // Mapea y devuelve la instrucción de carga

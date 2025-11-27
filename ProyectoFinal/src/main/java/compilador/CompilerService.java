@@ -11,17 +11,17 @@ import compilador.generacion.DiagramGenerator;
 import java.util.List;
 import java.io.FileWriter;
 import java.io.IOException;
-// Se elimina el import de LogService
+
 
 public class CompilerService {
 
-    // Se eliminó la instancia de LogService
+    
 
     public CompilerService() {
-        // No se necesita inicializar el LogService
+        
     }
 
-    // Se eliminó el parámetro userId de la firma del método
+    
     public CompilerResult compile(String sourceCode) { 
         try {
             // FASES 1, 2, 3 (Análisis)
@@ -58,12 +58,12 @@ public class CompilerService {
                     dotWriter.write(dotResult);
                 }
             } catch (IOException e) {
-                // Importante: Si la escritura falla, lo registramos pero dejamos que la compilación continúe.
+                
                 System.err.println("Advertencia de I/O: No se pudieron guardar los archivos de salida en 'output/'. Verifique los permisos o la existencia de la carpeta. Detalle: " + e.getMessage());
             }
             // ======================================================
 
-            // Se eliminó la llamada a logService.recordLog(...)
+            
 
             return new CompilerResult(asmResult, dotResult);
 

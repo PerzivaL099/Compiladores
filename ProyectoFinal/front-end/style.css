@@ -1,12 +1,18 @@
-/* 1. Reset Global y Estructura Principal */
+/* ======================================================= */
+/* 1. ESTILOS BASE Y ESTRUCTURA (VERSION MAIN) */
+/* ======================================================= */
+
 body { 
     margin: 0; 
     padding: 0; 
     background-color: #e8e8e8;
+    color: #333;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
     display: flex; 
     flex-direction: column; 
     height: 100vh; 
+    /* Transición suave al cambiar de tema */
+    transition: background-color 0.3s, color 0.3s; 
 }
 
 /* 2. Encabezado principal */
@@ -16,53 +22,49 @@ header {
     padding: 15px 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     flex-shrink: 0; 
+    display: flex;
+    justify-content: space-between; /* Separar título y botón */
+    align-items: center;
+    transition: background-color 0.3s;
 }
 h1 { margin: 0; font-size: 1.5em; }
 
-/* --- CORRECCIÓN CLAVE --- */
-/* 3. Contenedor Principal (Grid Layout 1fr 1fr 1fr) */
+/* 3. Contenedor Principal (3 Columnas) */
 #app-container { 
     display: grid; 
-    grid-template-columns: 1fr 1fr 1fr; /* Tres columnas iguales */
+    grid-template-columns: 1fr 1fr 1fr; 
     flex-grow: 1; 
     width: 100%;
 }
 
-/* 4. Columna de Input (Izquierda) */
-#input-column { 
+/* 4, 5, 6. Columnas Individuales */
+#input-column, 
+#asm-output-column, 
+#diagram-output-column { 
     padding: 20px; 
-    border-right: 1px solid #ddd; 
-    background-color: #FFFFFF;
     display: flex;
     flex-direction: column;
     overflow-y: auto; 
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
-/* 5. Columna de Ensamblador (Medio - NUEVA ID) */
-#asm-output-column { /* Nuevo Contenedor */
-    padding: 20px; 
-    border-right: 1px solid #ddd; /* Añadimos borde al medio */
+/* Colores base (Modo Claro) */
+#input-column { 
+    border-right: 1px solid #ddd; 
+    background-color: #FFFFFF;
+}
+#asm-output-column { 
+    border-right: 1px solid #ddd; 
     background-color: #fbfbfb;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
 }
-
-/* 6. Columna de Diagrama (Derecha - NUEVA ID) */
-#diagram-output-column { /* Nuevo Contenedor */
-    padding: 20px; 
+#diagram-output-column { 
     background-color: #fcfcfc;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
 }
-/* --- FIN CORRECCIÓN CLAVE --- */
-
 
 /* 7. Estilo CodeMirror */
 .CodeMirror { 
     border: 1px solid #333; 
-    height: 100%; /* Ocupa toda la altura disponible en la columna */
+    height: 100%; 
     font-size: 14px; 
     flex-grow: 1;
     margin-bottom: 15px;
@@ -72,8 +74,15 @@ h1 { margin: 0; font-size: 1.5em; }
 #asmOutput { 
     flex-grow: 1; 
     min-height: 150px; 
-    resize: none; /* Quitamos la opción de redimensionar */
-    height: 100%; /* Ocupa la altura del contenedor */
+    resize: none; 
+    height: 100%;
+    /* Estilos base */
+    background-color: white;
+    color: black;
+    border: 1px solid #ccc;
+    padding: 10px;
+    font-family: monospace;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 }
 
 /* 9. Estilo de Diagrama */
@@ -83,6 +92,7 @@ h1 { margin: 0; font-size: 1.5em; }
     overflow: auto; 
     background-color: white; 
     border: 1px solid #eee;
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
 /* 10. Botones y Errores */
@@ -102,5 +112,86 @@ h1 { margin: 0; font-size: 1.5em; }
     padding: 10px; 
     margin-top: 10px;
     min-height: 30px;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 }
-h3 { margin: 0 0 10px 0; font-size: 1.2em; color: #333; }
+h3 { margin: 0 0 10px 0; font-size: 1.2em; color: #333; transition: color 0.3s; }
+
+/* Estilo del Botón de Modo Oscuro */
+#themeToggle {
+    background-color: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* =========================================
+    MODO OSCURO 
+   ========================================= */
+
+/* 1. Body y Header */
+body.dark-mode {
+    background-color: #272822; /* Fondo general oscuro */
+    color: #f8f8f2;
+}
+
+.dark-mode header {
+    background-color: #1a1a1a;
+    border-bottom: 1px solid #444;
+}
+
+/* 2. Columnas (Usando los IDs de tu Main) */
+.dark-mode #input-column,
+.dark-mode #asm-output-column, 
+.dark-mode #diagram-output-column {
+    background-color: #3e3f3a; /* Gris oscuro para los paneles */
+    border-color: #555;
+}
+
+/* 3. Títulos */
+.dark-mode h3 {
+    color: #FFD700; /* Dorado */
+}
+
+/* 4. Áreas de Texto (Donde escribes y donde sale el ASM) */
+.dark-mode textarea, 
+.dark-mode #asmOutput,
+.dark-mode pre,
+.dark-mode #errorOutput {
+    background-color: #272822 !important; /* Fondo casi negro */
+    color: #f8f8f2 !important;            /* Texto blanco */
+    border: 1px solid #555;
+}
+
+/* 5. CodeMirror (Editor de código fuente) */
+.dark-mode .CodeMirror {
+    background-color: #272822 !important;
+    /* IMPORTANTE: No forzamos el color de texto global aquí 
+       para permitir que los colores de sintaxis se vean */
+    border: 1px solid #555;
+}
+.dark-mode .CodeMirror-gutters {
+    background-color: #272822 !important;
+    border-right: 1px solid #555;
+}
+
+
+.dark-mode .cm-keyword { color: #f92672 !important; } /* int, if, while (Rosa) */
+.dark-mode .cm-def { color: #fd971f !important; }     /* nombres de funciones (Naranja) */
+.dark-mode .cm-variable { color: #f8f8f2 !important; } /* variables (Blanco) */
+.dark-mode .cm-number { color: #ae81ff !important; }   /* números (Morado) */
+.dark-mode .cm-string { color: #e6db74 !important; }   /* strings (Amarillo) */
+.dark-mode .cm-comment { color: #75715e !important; }  /* comentarios (Gris) */
+
+/* 6. Diagrama (Gris medio para ver líneas negras) */
+.dark-mode #diagramContainer {
+    background-color: #bfbfbf !important; 
+    border-color: #555;
+}
+
+/* 7. Botón Modo Oscuro */
+.dark-mode #themeToggle {
+    border-color: #FFD700;
+    color: #FFD700;
+}

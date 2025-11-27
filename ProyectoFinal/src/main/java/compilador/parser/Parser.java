@@ -147,10 +147,10 @@ public class Parser {
         }
         
         if (check(TokenType.RETURN)) {
-            return parseReturnStatement(); // Nuevo
+            return parseReturnStatement(); 
         }
         
-        return parseAssignmentOrCall(); // Nuevo
+        return parseAssignmentOrCall(); 
     }
     
     // Nuevo: <Decl> -> <Type> ID (ASSIGN <Expression>)? SEMICOLON
@@ -208,7 +208,7 @@ public class Parser {
     }
 
     private IfStatement parseIfStatement() {
-        // ... (Implementación ya proporcionada)
+        
         int line = currentToken.getLine();
         consume(TokenType.IF);
         
@@ -228,7 +228,7 @@ public class Parser {
     }
     
     private WhileStatement parseWhileStatement() {
-        // ... (Implementación ya proporcionada)
+        
         int line = currentToken.getLine();
         consume(TokenType.WHILE);
         
@@ -271,8 +271,7 @@ public class Parser {
         return expr;
     }
     
-    // NUEVO: Implementa la Precedencia de Igualdad (Tipo 3)
-    // <Equality> -> <Relational> ( (EQ | NEQ) <Relational> )*
+    
     private Expression parseEquality() {
         Expression expr = parseRelational(); // Llama al siguiente nivel de precedencia
 
@@ -285,7 +284,7 @@ public class Parser {
         return expr;
     }
 
-    // NUEVO: Implementa la Precedencia Relacional (Tipo 3)
+    
     // <Relational> -> <Additive> ( (LT | GT | LTE | GTE) <Additive> )*
     private Expression parseRelational() {
         Expression expr = parseAdditive(); // Llama al siguiente nivel de precedencia
@@ -299,7 +298,7 @@ public class Parser {
         return expr;
     }
     
-    // NUEVO: Implementa la Precedencia Aditiva (Tipo 3)
+    
     // <Additive> -> <Multiplicative> ( (PLUS | MINUS) <Multiplicative> )*
     private Expression parseAdditive() {
         Expression expr = parseMultiplicative(); // Llama al siguiente nivel de precedencia
@@ -313,7 +312,7 @@ public class Parser {
         return expr;
     }
 
-    // NUEVO: Implementa la Precedencia Multiplicativa (Tipo 3)
+    
     // <Multiplicative> -> <Unary> ( (MULT | DIV) <Unary> )*
     private Expression parseMultiplicative() {
         Expression expr = parseUnary(); // Llama al siguiente nivel de precedencia
@@ -327,7 +326,7 @@ public class Parser {
         return expr;
     }
 
-    // NUEVO: Implementa la Precedencia Unaria y la Llamada a Primaria (Tipo 3)
+    
     // <Unary> -> (NOT | MINUS) <Unary> | <Primary>
     private Expression parseUnary() {
         if (check(TokenType.NOT, TokenType.MINUS)) {
@@ -341,7 +340,7 @@ public class Parser {
         return parsePrimary();
     }
     
-    // NUEVO: Implementa Nodos Primarios (Literales, ID, Llamadas, Paréntesis) (Tipo 3)
+    
     // <Primary> -> INTEGER_LITERAL | TRUE | FALSE | ID | <FunCall> | ( <Expression> )
     private Expression parsePrimary() {
         int line = currentToken.getLine();
@@ -370,7 +369,7 @@ public class Parser {
             Token idToken = currentToken;
             consume(TokenType.ID);
             
-            // Podría ser una Llamada a Función o acceso a Variable
+            
             if (check(TokenType.LPAREN)) {
                 return parseFunctionCall(idToken.getLexeme(), line);
             }
@@ -383,8 +382,7 @@ public class Parser {
             + ": Se esperaba una expresión primaria, pero se encontró " + currentToken.getType());
     }
 
-    // NUEVO: Maneja la lista de argumentos en una Llamada a Función (Tipo 3)
-    // <FunCall> -> ID LPAREN <ArgumentList> RPAREN
+    
     private FunctionCall parseFunctionCall(String id, int line) {
         // Asume que el token ID ya fue consumido en parsePrimary() o parseAssignmentOrCall()
         consume(TokenType.LPAREN);

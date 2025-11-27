@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json'
                 }, 
                 body: payload,
-                credentials: 'include' // ⭐ Crucial para cookies de sesión
+                credentials: 'include' // 
             });
 
             console.log('📡 Respuesta del servidor - Status:', response.status);

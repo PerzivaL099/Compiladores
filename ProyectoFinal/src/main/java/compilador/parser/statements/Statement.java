@@ -13,6 +13,5 @@ public abstract class Statement extends ASTNode {
         super(line); 
     }
     
-    // Nota: El método accept() será implementado por los hijos
-    // (IfStatement, BlockStatement, etc.)
+    
 }

@@ -43,12 +43,7 @@ public class Lexer {
         }
     }
 
-    // --- INICIO DE LA CORRECCIÓN ---
-
-    // 1. ESTE MÉTODO REEMPLAZA TU VERSIÓN ANTERIOR DE skipWhitespace
-    /**
-     * Consume espacios en blanco, saltos de línea y comentarios de una sola línea.
-     */
+    
     private void skipWhitespace() {
         while (currentChar != '\0') { // Mientras no sea fin de archivo
             
@@ -74,11 +69,7 @@ public class Lexer {
         }
     }
 
-    // 2. ESTE ES EL NUEVO MÉTODO AUXILIAR QUE DEBES AGREGAR
-    /**
-     * Avanza el cursor hasta el final de la línea (o fin de archivo) 
-     * para ignorar un comentario.
-     */
+    
     private void skipLineComment() {
         // Avanza hasta que encuentre el salto de línea o el fin de archivo
         while (currentChar != '\n' && currentChar != '\0') {
@@ -86,10 +77,10 @@ public class Lexer {
         }
     }
 
-    // --- FIN DE LA CORRECCIÓN ---
+    
 
 
-    // **MÉTODO PRINCIPAL: Entrega el siguiente token**
+    
     public Token nextToken() {
         skipWhitespace(); // <- Esta llamada ahora también ignora comentarios
 
@@ -168,8 +159,8 @@ public class Lexer {
             case '-': advance(); return new Token(Token.TokenType.MINUS, "-", null, startLine);
             case '*': advance(); return new Token(Token.TokenType.MULT, "*", null, startLine);
             
-            // NOTA: La lógica de '/' (división) se maneja aquí. 
-            // El 'skipWhitespace' solo detecta '//' (comentario).
+            
+            
             case '/': advance(); return new Token(Token.TokenType.DIV, "/", null, startLine);
             
             case ';': advance(); return new Token(Token.TokenType.SEMICOLON, ";", null, startLine);

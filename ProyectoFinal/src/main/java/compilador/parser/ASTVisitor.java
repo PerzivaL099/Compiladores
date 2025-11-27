@@ -8,10 +8,8 @@ import compilador.parser.declarations.*;
 /**
  * Interfaz que define el Patrón Visitor para recorrer el AST.
  * Cada fase del compilador (Semántico, Cuádruplas, Diagramas)
- * implementará esta interfaz.
- * (La línea ha sido eliminada)
  */
-// LA CORRECCIÓN CLAVE: <BlockStatement> ha sido eliminado de la definición
+
 public interface ASTVisitor { 
     
     // Nodos de Declaración

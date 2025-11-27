@@ -2,14 +2,14 @@ package compilador;
 
 //Almacena resultados
 public class CompilerResult {
-    private final boolean success;      // ⭐ AGREGADO
+    private final boolean success;      
     private final String asmCode;
     private final String dotCode;
     private final String error;
 
     // Constructor para éxito
     public CompilerResult(String asmCode, String dotCode) {
-        this.success = true;            // ⭐ AGREGADO
+        this.success = true;            
         this.asmCode = asmCode;
         this.dotCode = dotCode;
         this.error = null;
@@ -17,14 +17,14 @@ public class CompilerResult {
 
     // Constructor para error
     public CompilerResult(String error) {
-        this.success = false;           // ⭐ AGREGADO
+        this.success = false;           
         this.asmCode = "";
         this.dotCode = "";
         this.error = error;
     }
 
     // Getters
-    public boolean isSuccess() {        // ⭐ AGREGADO
+    public boolean isSuccess() {        
         return success;
     }
 

@@ -40,7 +40,7 @@ public class SemanticAnalyzer implements ASTVisitor {
         throw new RuntimeException("[Error Semántico en línea " + line + "] " + message);
     }
     
-    // --- MÉTODOS DE VISITA (IMPLEMENTACIÓN COMPLETA) ---
+    
 
     // =================================================================
     // I. NODOS DE DECLARACIÓN
@@ -50,8 +50,7 @@ public class SemanticAnalyzer implements ASTVisitor {
     public Object visit(Program node) {
         // 1. Primera pasada: registrar todas las firmas de funciones
         for (FunctionDeclaration func : node.functions) {
-            // Asume que TablaSimbolos tiene un método para registrar la firma
-            // LÍNEA CORREGIDA
+            
             tablaSimbolos.declareFunction(func);
         }
         

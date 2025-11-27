@@ -16,15 +16,7 @@ public class Main {
         // 1. CONFIGURACIÓN DEL SERVIDOR Y SESIONES
         ipAddress("127.0.0.1");
         port(4567);
-        // La gestión de sesiones de Spark es complicada y no necesaria para la compilación, se mantiene comentada.
-        /*
-        // sessionManagement(config -> {
-        //   config.sessionTrackingMode("cookie");
-        // });
-        */
         
-        // --- FILTROS DE SEGURIDAD (DESACTIVADOS PARA LA PRUEBA) ---
-        // Se elimina el filtro 'before /compile' que requiere el user_id
         
         // --- HABILITAR CORS (Cambios para solucionar 'Failed to fetch') ---
         // Se añade la cabecera Access-Control-Allow-Headers para permitir el Content-Type (necesario para POST)
@@ -46,14 +38,14 @@ public class Main {
             return "OK";
         });
         
-        // El * permite que cualquier origen (incluyendo tu front-end en 127.0.0.1:5500) acceda a los recursos
+        
         before((request, response) -> response.header("Access-Control-Allow-Origin", "*"));
 
 
         // --- ENDPOINTS DE LA APLICACIÓN ---
 
         // 3. ENDPOINT DE LOGIN (SE MANTIENE ACTIVO PARA PRUEBAS)
-        // Nota: Es posible que necesites añadir headers CORS también en el post-response si el front-end usa credenciales.
+        
         post("/login", (request, response) -> {
             response.type("application/json");
             
@@ -87,9 +79,9 @@ public class Main {
             // Llama al CompilerService sin pasar el userId
             CompilerResult result = compilerService.compile(sourceCode); 
             
-            // ⭐⭐⭐ IMPLEMENTACIÓN DEL CÓDIGO DE ESTADO HTTP ⭐⭐⭐
+            
             if (result.isSuccess()) {
-                response.status(200); // OK: Todo el proceso de compilación fue exitoso
+                response.status(200); 
             } else {
                 // ERROR: Error léxico, sintáctico o semántico.
                 // Usamos 400 Bad Request para indicar un fallo en los datos de entrada (el código fuente).

@@ -20,8 +20,7 @@ public class Parameter extends ASTNode {
     // Implementación del Patrón Visitor
     @Override
     public Object accept(ASTVisitor visitor) {
-        // En el análisis semántico, este método es manejado por visit(FunctionDeclaration)
-        // pero se incluye para completar la interfaz.
+        
         return visitor.visit(this); 
     }
     

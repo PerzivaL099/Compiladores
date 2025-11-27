@@ -19,14 +19,14 @@ import java.util.Map;
 @SuppressWarnings("rawtypes") // Suprimir advertencias de tipo crudo
 public class DiagramGenerator implements ASTVisitor {
 
-    // --- INICIO DE CORRECCIÓN 1: Mover variables de estado ---
+    // ---  Mover variables de estado ---
     // Se mueven de 'final' para poder reiniciarlas en cada llamada
     private StringBuilder dotCode;
     private int nodeCounter;
     private Map<ASTNode, String[]> nodeRegistry;
-    // --- FIN DE CORRECCIÓN 1 ---
+    
 
-    // --- INICIO DE CORRECCIÓN 2: Nuevo método para el Servidor Web ---
+    // ---  Nuevo método para el Servidor Web ---
     /**
      * Genera el código DOT como un String, sin escribir a disco.
      * Este método es llamado por CompilerService.
@@ -51,12 +51,12 @@ public class DiagramGenerator implements ASTVisitor {
         
         return dotCode.toString();
     }
-    // --- FIN DE CORRECCIÓN 2 ---
+    
 
-    // --- INICIO DE CORRECCIÓN 3: Refactorizar método antiguo ---
+    
     /**
      * Genera el código DOT y lo escribe a un archivo.
-     * (Usado por el Main.java de línea de comandos original)
+   
      */
     public void generate(Program program, String filename) throws IOException {
         // Ahora llama al nuevo método para obtener el string
@@ -67,9 +67,8 @@ public class DiagramGenerator implements ASTVisitor {
             writer.write(dotResult);
         }
         
-        // (La salida de consola se movió a Main.java, pero puede quedar aquí)
+        
     }
-    // --- FIN DE CORRECCIÓN 3 ---
     
     // --- Utilidades DOT ---
     
@@ -86,8 +85,8 @@ public class DiagramGenerator implements ASTVisitor {
         dotCode.append(String.format("\t%s -> %s [label=\"%s\"];\n", from, to, label));
     }
 
-    // --- MÉTODOS DE VISITA (Sin cambios) ---
-    // (Tu implementación completa de todos los métodos 'visit' va aquí)
+    // --- MÉTODOS DE VISITA 
+    
 
     @Override
     public Object visit(Program node) {
